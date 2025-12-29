@@ -1,6 +1,7 @@
 /**
- * Beautiful Flowise Chat Widget v1.4.1
+ * Beautiful Flowise Chat Widget v1.4.2
  * Buttery smooth streaming with loading animation
+ * Created by RPS
  */
 
 (function() {
@@ -366,6 +367,11 @@
     font-size: 11px;
     color: #6b7280;
     text-decoration: none;
+    transition: color 0.2s;
+}
+
+.bf-branding:hover {
+    color: var(--bf-primary-color);
 }
 
 /* THEMES */
@@ -462,7 +468,7 @@
                         <button class="bf-send-btn" id="bf-send">${this.config.sendButtonText}</button>
                     </div>
                     <div class="bf-footer">
-                        <a href="https://github.com/unknownfriend00007/beautiful-flowise-chat" target="_blank" class="bf-branding">Powered by Beautiful Flowise Chat</a>
+                        <a href="mailto:mail.rps.active@proton.me" class="bf-branding">Powered by RPS</a>
                     </div>
                 </div>
             `;
@@ -510,13 +516,11 @@
             const message = input.value.trim();
             if (!message || this.currentStreamingMessageId) return;
 
-            // Add user message
             this.addMessage(message, 'user');
             input.value = '';
             input.style.height = 'auto';
             sendBtn.disabled = true;
 
-            // Create placeholder bot message with loading animation
             const botMessageId = this.createPlaceholderMessage();
             this.currentStreamingMessageId = botMessageId;
 
@@ -608,7 +612,6 @@
                         if (token) {
                             if (!firstTokenReceived) {
                                 firstTokenReceived = true;
-                                // Remove loading animation on first token
                             }
                             fullText += token;
                             this.updatePlaceholderMessage(botMessageId, fullText, true);
@@ -676,12 +679,10 @@
             const textElement = messageDiv.querySelector('.bf-message-text');
             
             if (isStreaming) {
-                // While streaming: plain text + cursor
                 const escapedText = this.escapeHtml(text).replace(/\n/g, '<br>');
                 textElement.innerHTML = escapedText + '<span class="bf-cursor">|</span>';
                 messageDiv.classList.add('bf-streaming');
             } else {
-                // Done streaming: apply markdown formatting
                 textElement.innerHTML = this.formatMarkdown(text);
                 messageDiv.classList.remove('bf-streaming');
             }
