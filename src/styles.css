@@ -1,4 +1,4 @@
-/* Beautiful Flowise Chat Widget Styles v1.1.0 */
+/* Beautiful Flowise Chat Widget Styles v1.1.1 */
 
 window.BEAUTIFUL_FLOWISE_STYLES = `
 :root {
@@ -260,6 +260,7 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
 
 .bf-message-content {
     max-width: 75%;
+    min-width: 60px;
 }
 
 .bf-message-text {
@@ -271,6 +272,10 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     line-height: 1.5;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     word-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+    min-width: 40px;
+    display: inline-block;
 }
 
 /* FIX: User message with proper contrast */

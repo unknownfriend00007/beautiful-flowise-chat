@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.1.0
+ * Beautiful Flowise Chat Widget v1.1.1
  * A modern, customizable alternative to Flowise embed
  */
 
@@ -182,10 +182,8 @@
             input.value = '';
             input.style.height = 'auto';
 
-            // Show typing indicator if not streaming
-            if (!this.config.enableStreaming) {
-                this.showTyping(true);
-            }
+            // Always show typing indicator first
+            this.showTyping(true);
 
             try {
                 if (this.config.enableStreaming) {
@@ -201,9 +199,6 @@
         }
 
         async sendMessageWithStreaming(message) {
-            // Create empty message for streaming
-            const messageId = this.createStreamingMessage();
-            
             try {
                 const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                     method: 'POST',
@@ -219,6 +214,22 @@
 
                 if (!response.ok) throw new Error('API request failed');
 
+                // Check if response is streaming
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('text/event-stream')) {
+                    // Fallback to non-streaming
+                    const data = await response.json();
+                    this.showTyping(false);
+                    const botMessage = data.text || data.answer || data.response || 'Sorry, I could not process your request.';
+                    this.addMessage(botMessage, 'bot');
+                    this.conversationHistory.push([message, botMessage]);
+                    return;
+                }
+
+                // Hide typing, create streaming message
+                this.showTyping(false);
+                const messageId = this.createStreamingMessage();
+                
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let fullText = '';
@@ -245,14 +256,15 @@
                     }
                 }
 
+                // Finalize streaming message
+                this.finalizeStreamingMessage(messageId);
+                
                 // Update conversation history
-                this.conversationHistory.push([message, fullText]);
-                this.currentStreamingMessage = null;
+                this.conversationHistory.push([message, fullText || 'No response']);
 
             } catch (error) {
-                // Fallback to non-streaming if streaming fails
                 console.warn('Streaming failed, falling back to non-streaming:', error);
-                this.removeStreamingMessage(messageId);
+                this.showTyping(false);
                 await this.sendMessageWithoutStreaming(message);
             }
         }
@@ -314,11 +326,16 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        removeStreamingMessage(messageId) {
+        finalizeStreamingMessage(messageId) {
             const messageDiv = document.getElementById(messageId);
-            if (messageDiv) {
-                messageDiv.remove();
-            }
+            if (!messageDiv) return;
+
+            // Remove cursor and streaming class
+            messageDiv.classList.remove('bf-streaming');
+            const textElement = messageDiv.querySelector('.bf-message-text');
+            const currentText = textElement.textContent.replace('|', '');
+            textElement.innerHTML = this.escapeHtml(currentText);
+            this.currentStreamingMessage = null;
         }
 
         addMessage(text, sender, isError = false) {
