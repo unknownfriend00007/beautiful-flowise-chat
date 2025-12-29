@@ -1,6 +1,6 @@
 /**
- * Beautiful Flowise Chat Widget v1.3.2
- * A modern, customizable alternative to Flowise embed
+ * Beautiful Flowise Chat Widget v1.4.0
+ * Buttery smooth streaming inspired by PRIMUS-V2
  */
 
 (function() {
@@ -323,6 +323,7 @@
 }
 
 .bf-send-btn:hover { transform: scale(1.05); }
+.bf-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .bf-footer {
     padding: 8px;
@@ -368,7 +369,7 @@
             this.apiHost = config.apiHost;
             this.conversationHistory = [];
             this.isOpen = false;
-            this.currentStreamingMessage = null;
+            this.currentStreamingMessageId = null;
             this.init();
         }
 
@@ -426,10 +427,6 @@
                             </div>
                         </div>` : ''}
                     </div>
-                    <div class="bf-typing" id="bf-typing" style="display: none;">
-                        <div class="bf-typing-avatar">${this.config.avatar}</div>
-                        <div class="bf-typing-dots"><span></span><span></span><span></span></div>
-                    </div>
                     <div class="bf-input-container">
                         <textarea class="bf-input" id="bf-input" placeholder="${this.config.placeholder}" rows="1"></textarea>
                         <button class="bf-send-btn" id="bf-send">${this.config.sendButtonText}</button>
@@ -479,33 +476,38 @@
 
         async sendMessage() {
             const input = document.getElementById('bf-input');
+            const sendBtn = document.getElementById('bf-send');
             const message = input.value.trim();
-            if (!message) return;
+            if (!message || this.currentStreamingMessageId) return;
 
+            // Add user message
             this.addMessage(message, 'user');
             input.value = '';
             input.style.height = 'auto';
-            this.showTyping(true);
+            sendBtn.disabled = true;
+
+            // Create placeholder bot message immediately (PRIMUS-V2 style!)
+            const botMessageId = this.createPlaceholderMessage();
+            this.currentStreamingMessageId = botMessageId;
 
             try {
                 if (this.config.enableStreaming) {
-                    await this.sendWithStreaming(message);
+                    await this.sendWithStreaming(message, botMessageId);
                 } else {
-                    await this.sendWithoutStreaming(message);
+                    await this.sendWithoutStreaming(message, botMessageId);
                 }
             } catch (error) {
                 this.log('Error:', error);
-                this.showTyping(false);
-                if (this.currentStreamingMessage) {
-                    const elem = document.getElementById(this.currentStreamingMessage);
-                    if (elem) elem.remove();
-                    this.currentStreamingMessage = null;
-                }
-                this.addMessage('Sorry, something went wrong.', 'bot');
+                const elem = document.getElementById(botMessageId);
+                if (elem) elem.remove();
+                this.addMessage('Sorry, something went wrong. Please try again.', 'bot');
+            } finally {
+                this.currentStreamingMessageId = null;
+                sendBtn.disabled = false;
             }
         }
 
-        async sendWithStreaming(message) {
+        async sendWithStreaming(message, botMessageId) {
             try {
                 const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                     method: 'POST',
@@ -518,9 +520,8 @@
                 const contentType = response.headers.get('content-type');
                 if (!contentType?.includes('text/event-stream')) {
                     const data = await response.json();
-                    this.showTyping(false);
                     const botMessage = data.text || data.answer || data.response || 'No response';
-                    this.addMessage(botMessage, 'bot');
+                    this.updatePlaceholderMessage(botMessageId, botMessage, false);
                     this.conversationHistory.push([message, botMessage]);
                     return;
                 }
@@ -529,47 +530,61 @@
                 const decoder = new TextDecoder();
                 let fullText = '';
                 let buffer = '';
-                let messageId = null;
-                let firstToken = true;
+                let streamEnded = false;
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+                while (!streamEnded) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        streamEnded = true;
+                        break;
+                    }
 
                     buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop() || '';
+                    let idx;
+                    
+                    // Process complete lines from buffer (PRIMUS-V2 technique!)
+                    while ((idx = buffer.indexOf('\n')) !== -1) {
+                        const line = buffer.slice(0, idx).trim();
+                        buffer = buffer.slice(idx + 1);
 
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const dataStr = line.substring(6).trim();
-                            if (!dataStr || dataStr === '[DONE]') continue;
-                            
-                            try {
-                                const data = JSON.parse(dataStr);
-                                if (data.event === 'token' && data.data) {
-                                    fullText += data.data;
-                                    
-                                    // Create message bubble only when first token arrives
-                                    if (firstToken) {
-                                        this.showTyping(false);
-                                        messageId = this.createStreamingMessage();
-                                        firstToken = false;
-                                    }
-                                    
-                                    if (messageId) {
-                                        this.updateStreamingMessage(messageId, fullText, true);
-                                    }
-                                }
-                            } catch (e) {
-                                this.log('Parse error:', e);
+                        if (!line || line.startsWith(':') || !line.startsWith('data:')) continue;
+
+                        const payload = line.slice(5).trim();
+                        if (payload === '[DONE]' || payload === '"[DONE]"') {
+                            streamEnded = true;
+                            break;
+                        }
+
+                        let token = '';
+                        try {
+                            const obj = JSON.parse(payload);
+                            if (obj && typeof obj === 'object' && obj.event === 'token' && obj.data) {
+                                token = obj.data;
+                            } else if (typeof obj === 'string') {
+                                token = obj;
                             }
+                        } catch {
+                            if (payload.startsWith('"') && payload.endsWith('"')) {
+                                try {
+                                    token = JSON.parse(payload);
+                                } catch {
+                                    token = payload;
+                                }
+                            } else {
+                                token = payload;
+                            }
+                        }
+
+                        if (token) {
+                            fullText += token;
+                            this.updatePlaceholderMessage(botMessageId, fullText, true);
                         }
                     }
                 }
 
-                if (fullText && messageId) {
-                    this.updateStreamingMessage(messageId, fullText, false);
+                // Finalize with markdown formatting
+                if (fullText) {
+                    this.updatePlaceholderMessage(botMessageId, fullText, false);
                     this.conversationHistory.push([message, fullText]);
                 } else {
                     throw new Error('No text streamed');
@@ -577,17 +592,11 @@
 
             } catch (error) {
                 this.log('Streaming failed, using fallback:', error);
-                if (this.currentStreamingMessage) {
-                    const elem = document.getElementById(this.currentStreamingMessage);
-                    if (elem) elem.remove();
-                    this.currentStreamingMessage = null;
-                }
-                this.showTyping(true);
-                await this.sendWithoutStreaming(message);
+                await this.sendWithoutStreaming(message, botMessageId);
             }
         }
 
-        async sendWithoutStreaming(message) {
+        async sendWithoutStreaming(message, botMessageId) {
             const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -596,16 +605,15 @@
 
             if (!response.ok) throw new Error('API failed');
             const data = await response.json();
-            this.showTyping(false);
             
             const botMessage = data.text || data.answer || data.response || 'No response';
-            this.addMessage(botMessage, 'bot');
+            this.updatePlaceholderMessage(botMessageId, botMessage, false);
             this.conversationHistory.push([message, botMessage]);
         }
 
-        createStreamingMessage() {
+        createPlaceholderMessage() {
             const messagesContainer = document.getElementById('bf-messages');
-            const messageId = 'streaming-' + Date.now();
+            const messageId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
             const messageDiv = document.createElement('div');
             messageDiv.id = messageId;
             messageDiv.className = 'bf-message bf-bot-message bf-streaming';
@@ -619,23 +627,24 @@
 
             messagesContainer.appendChild(messageDiv);
             this.scrollToBottom();
-            this.currentStreamingMessage = messageId;
             return messageId;
         }
 
-        updateStreamingMessage(messageId, text, showCursor) {
+        updatePlaceholderMessage(messageId, text, isStreaming) {
             const messageDiv = document.getElementById(messageId);
             if (!messageDiv) return;
 
             const textElement = messageDiv.querySelector('.bf-message-text');
-            const formattedText = this.escapeHtml(text).replace(/\n/g, '<br>');
             
-            if (showCursor) {
-                textElement.innerHTML = formattedText + '<span class="bf-cursor">|</span>';
+            if (isStreaming) {
+                // While streaming: plain text + cursor
+                const escapedText = this.escapeHtml(text).replace(/\n/g, '<br>');
+                textElement.innerHTML = escapedText + '<span class="bf-cursor">|</span>';
+                messageDiv.classList.add('bf-streaming');
             } else {
+                // Done streaming: apply markdown formatting
                 textElement.innerHTML = this.formatMarkdown(text);
                 messageDiv.classList.remove('bf-streaming');
-                this.currentStreamingMessage = null;
             }
             
             this.scrollToBottom();
@@ -669,7 +678,7 @@
             // Inline code
             html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
             
-            // Headers (remove ### but keep text)
+            // Headers
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
@@ -687,9 +696,7 @@
             
             // Numbered lists
             html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-            html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => {
-                return '<ol>' + match + '</ol>';
-            });
+            html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => '<ol>' + match + '</ol>');
             
             // Bullet lists
             html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
@@ -698,7 +705,7 @@
                 return match;
             });
             
-            // Paragraphs and line breaks
+            // Paragraphs
             html = html.replace(/\n\n/g, '</p><p>');
             html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
@@ -713,11 +720,6 @@
             html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
             
             return html;
-        }
-
-        showTyping(show) {
-            document.getElementById('bf-typing').style.display = show ? 'flex' : 'none';
-            if (show) this.scrollToBottom();
         }
 
         scrollToBottom() {
