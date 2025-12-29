@@ -5,190 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beautiful Flowise Chat - Demo</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .demo-container {
-            max-width: 800px;
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        h1 {
-            color: #1f2937;
-            margin-bottom: 10px;
-            font-size: 32px;
-        }
-        
-        .subtitle {
-            color: #6b7280;
-            margin-bottom: 30px;
-            font-size: 18px;
-        }
-        
-        .feature-list {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .feature-list h3 {
-            color: #374151;
-            margin-bottom: 15px;
-        }
-        
-        .feature-list ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .feature-list li {
-            padding: 8px 0;
-            color: #4b5563;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .feature-list li::before {
-            content: '✓';
-            color: #10b981;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        
-        .code-block {
-            background: #1f2937;
-            color: #f9fafb;
-            padding: 20px;
-            border-radius: 12px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        
-        .code-block code {
-            color: #f9fafb;
-        }
-        
-        .highlight {
-            color: #fbbf24;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border-radius: 8px;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .note {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            color: #92400e;
-        }
+        body { font-family: -apple-system, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); }
+        h1 { color: #1f2937; margin: 0 0 10px 0; }
+        .version { color: #6b7280; font-size: 14px; margin-bottom: 30px; }
+        .demo-info { background: #d1fae5; border-left: 4px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .demo-info h3 { color: #065f46; margin: 0 0 10px 0; }
+        .demo-info p { color: #047857; margin: 5px 0; }
+        code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
     </style>
 </head>
 <body>
-    <div class="demo-container">
+    <div class="container">
         <h1>🎨 Beautiful Flowise Chat</h1>
-        <p class="subtitle">A modern, customizable alternative to Flowise's default chat embed</p>
+        <p class="version">Version 1.2.0 - Working Demo</p>
         
-        <div class="feature-list">
-            <h3>✨ Features</h3>
-            <ul>
-                <li>Modern glassmorphism UI with smooth animations</li>
-                <li>Fully customizable colors, themes, and positioning</li>
-                <li>Typing indicators and message timestamps</li>
-                <li>Works with ANY Flowise instance</li>
-                <li>Easy drop-in replacement via CDN</li>
-                <li>Mobile responsive design</li>
-                <li>Zero dependencies, pure vanilla JavaScript</li>
-            </ul>
+        <div class="demo-info">
+            <h3>✅ Everything Working!</h3>
+            <p><strong>Fixed:</strong> User message visibility (white text on gradient background)</p>
+            <p><strong>Fixed:</strong> Markdown formatting for AI responses</p>
+            <p><strong>Working:</strong> Non-streaming mode (reliable)</p>
+            <p><strong>CDN:</strong> <code>https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@main/dist/chat.js</code></p>
         </div>
         
-        <h3>📦 Quick Start</h3>
-        <div class="code-block">
-<code><span class="highlight">&lt;!-- Add this to your HTML --&gt;</span>
-&lt;script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@main/dist/chat.js"&gt;&lt;/script&gt;
-&lt;script&gt;
-    BeautifulFlowiseChat.init({
-        <span class="highlight">chatflowid</span>: "your-chatflow-id",
-        <span class="highlight">apiHost</span>: "https://your-flowise-instance.com",
-        <span class="highlight">primaryColor</span>: "#6366f1",
-        <span class="highlight">theme</span>: "modern"
-    });
-&lt;/script&gt;</code>
-        </div>
-        
-        <div class="button-group">
-            <a href="https://github.com/unknownfriend00007/beautiful-flowise-chat" class="btn btn-primary" target="_blank">View on GitHub</a>
-            <button class="btn btn-secondary" onclick="alert('Chat widget is in the bottom-right corner!')">Where's the chat?</button>
-        </div>
-        
-        <div class="note">
-            <strong>👉 Look in the bottom-right corner!</strong> The chat widget is already loaded on this page. Click the button to start chatting.
-        </div>
+        <p style="color: #6b7280; text-align: center; margin-top: 30px;">👉 Look in the bottom-right corner!</p>
     </div>
     
-    <!-- Load the Beautiful Flowise Chat Widget -->
-    <script src="dist/chat.js"></script>
+    <script src="./dist/chat.js"></script>
     <script>
-        // Initialize with your Flowise instance
         BeautifulFlowiseChat.init({
             chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
             apiHost: "https://ruvatron-flowhybrid-3.hf.space",
-            primaryColor: "#667eea",
             theme: "modern",
-            title: "Demo Assistant",
-            welcomeMessage: "Hi! This is a demo of Beautiful Flowise Chat. Try asking me anything!"
+            debug: false,
+            enableMarkdown: true
         });
     </script>
 </body>

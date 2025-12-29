@@ -1,9 +1,197 @@
-/* Beautiful Flowise Chat Widget v1.1.0 - Professional Edition */
-/* Repository: https://github.com/unknownfriend00007/beautiful-flowise-chat */
-/* Features: Streaming support, Fixed user message visibility, Professional themes */
+/**
+ * Beautiful Flowise Chat Widget v1.2.0 - Complete Build
+ * STYLES + JAVASCRIPT COMBINED
+ */
 
-(function(){"use strict";const t={theme:"modern",primaryColor:"#6366f1",position:"bottom-right",width:"400px",height:"600px",title:"AI Assistant",subtitle:"Online",welcomeMessage:"Hi! How can I help you today?",placeholder:"Type your message...",sendButtonText:"\u27a4",showTimestamp:!0,enableStreaming:!0,enableSoundNotification:!1,avatar:"\ud83e\udd16"};class e{constructor(e){this.config={...t,...e},this.chatflowid=e.chatflowid,this.apiHost=e.apiHost,this.conversationHistory=[],this.isOpen=!1,this.isTyping=!1,this.currentStreamingMessage=null,this.init()}init(){this.injectStyles(),this.createWidget(),this.attachEventListeners()}injectStyles(){if(document.getElementById("beautiful-flowise-styles"))return;const t=document.createElement("style");t.id="beautiful-flowise-styles",t.textContent=`:root{--bf-primary-color:#6366f1;--bf-primary-dark:#4f46e5;--bf-bg-color:#fff;--bf-text-color:#1f2937;--bf-text-secondary:#6b7280;--bf-border-color:#e5e7eb;--bf-shadow:0 10px 40px rgba(0,0,0,.15);--bf-radius:16px}.bf-container *{box-sizing:border-box;margin:0;padding:0}.bf-container{position:fixed;z-index:999999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif}.bf-bottom-right{bottom:20px;right:20px}.bf-bottom-left{bottom:20px;left:20px}.bf-chat-button{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--bf-primary-color),var(--bf-primary-dark));border:none;cursor:pointer;box-shadow:var(--bf-shadow);transition:transform .3s ease,box-shadow .3s ease;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.bf-chat-button:hover{transform:scale(1.1);box-shadow:0 15px 50px rgba(0,0,0,.2)}.bf-chat-button:active{transform:scale(.95)}.bf-button-icon{width:28px;height:28px;color:#fff;stroke-width:2;transition:transform .3s ease}.bf-chat-window{position:absolute;bottom:80px;right:0;width:400px;max-width:calc(100vw - 40px);height:600px;max-height:calc(100vh - 120px);background:var(--bf-bg-color);border-radius:var(--bf-radius);box-shadow:var(--bf-shadow);display:flex;flex-direction:column;overflow:hidden;animation:slideUp .3s ease}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}.bf-header{background:linear-gradient(135deg,var(--bf-primary-color),var(--bf-primary-dark));color:#fff;padding:20px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}.bf-header::before{content:'';position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 70%);animation:pulse 3s ease-in-out infinite}@keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.1);opacity:.8}}.bf-header-content{display:flex;align-items:center;gap:12px;z-index:1}.bf-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;backdrop-filter:blur(10px)}.bf-header-text{flex:1}.bf-title{font-size:16px;font-weight:600;margin-bottom:2px}.bf-subtitle{font-size:12px;opacity:.9;display:flex;align-items:center;gap:6px}.bf-subtitle::before{content:'';width:8px;height:8px;background:#4ade80;border-radius:50%;display:inline-block;animation:blink 2s ease-in-out infinite}@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}.bf-minimize-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;transition:background .2s;z-index:1}.bf-minimize-btn:hover{background:rgba(255,255,255,.3)}.bf-messages{flex:1;overflow-y:auto;padding:20px;background:linear-gradient(180deg,#f9fafb 0%,#fff 100%);display:flex;flex-direction:column;gap:16px}.bf-messages::-webkit-scrollbar{width:6px}.bf-messages::-webkit-scrollbar-track{background:0 0}.bf-messages::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}.bf-messages::-webkit-scrollbar-thumb:hover{background:#94a3b8}.bf-message{display:flex;gap:10px;animation:fadeIn .3s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.bf-bot-message{align-self:flex-start}.bf-user-message{align-self:flex-end;flex-direction:row-reverse}.bf-message-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--bf-primary-color),var(--bf-primary-dark));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}.bf-message-content{max-width:75%}.bf-message-text{background:#fff;padding:12px 16px;border-radius:16px;color:var(--bf-text-color);font-size:14px;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.08);word-wrap:break-word}.bf-user-message .bf-message-text{background:linear-gradient(135deg,var(--bf-primary-color),var(--bf-primary-dark));color:#fff!important;box-shadow:0 2px 12px rgba(99,102,241,.3)}.bf-message-time{font-size:11px;color:var(--bf-text-secondary);margin-top:4px;padding:0 4px}.bf-error .bf-message-text{background:#fee2e2;color:#991b1b}.bf-streaming .bf-cursor{display:inline-block;animation:blink-cursor 1s step-end infinite;margin-left:2px;color:var(--bf-primary-color);font-weight:700}@keyframes blink-cursor{0%,50%{opacity:1}51%,100%{opacity:0}}.bf-typing{display:flex;align-items:center;gap:10px;padding:0 20px 10px}.bf-typing-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--bf-primary-color),var(--bf-primary-dark));display:flex;align-items:center;justify-content:center;font-size:16px}.bf-typing-dots{background:#fff;padding:12px 16px;border-radius:16px;display:flex;gap:4px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.bf-typing-dots span{width:8px;height:8px;background:#cbd5e1;border-radius:50%;animation:typing 1.4s ease-in-out infinite}.bf-typing-dots span:nth-child(1){animation-delay:0s}.bf-typing-dots span:nth-child(2){animation-delay:.2s}.bf-typing-dots span:nth-child(3){animation-delay:.4s}@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-10px);opacity:1}}.bf-input-container{padding:16px;background:#fff;border-top:1px solid var(--bf-border-color);display:flex;gap:10px;align-items:flex-end}.bf-input{flex:1;border:2px solid var(--bf-border-color);border-radius:12px;padding:12px 16px;font-size:14px;font-family:inherit;resize:none;outline:0;transition:border-color .2s;max-height:120px;min-height:44px;color:var(--bf-text-color)}.bf-input:focus{border-color:var(--bf-primary-color)}.bf-send-btn{background:linear-gradient(135deg,var(--bf-primary-color),var(--bf-primary-dark));color:#fff;border:none;border-radius:12px;width:44px;height:44px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;flex-shrink:0}.bf-send-btn:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(99,102,241,.4)}.bf-send-btn:active{transform:scale(.95)}.bf-footer{padding:8px;text-align:center;background:#f9fafb;border-top:1px solid var(--bf-border-color)}.bf-branding{font-size:11px;color:#6b7280;text-decoration:none;transition:color .2s}.bf-branding:hover{color:var(--bf-primary-color)}@media (max-width:480px){.bf-chat-window{width:calc(100vw - 40px);height:calc(100vh - 120px)}}.bf-theme-cloudflare{--bf-primary-color:#f38020;--bf-primary-dark:#d96b0f;--bf-bg-color:#fff;--bf-text-color:#1f2937}.bf-theme-cloudflare .bf-header{background:linear-gradient(135deg,#f38020 0%,#f6821f 100%)}.bf-theme-cloudflare .bf-messages{background:#fafafa}.bf-theme-cloudflare .bf-message-text{border:1px solid #f3f4f6}.bf-theme-cloudflare .bf-user-message .bf-message-text{background:linear-gradient(135deg,#f38020,#d96b0f);border:none}.bf-theme-intercom{--bf-primary-color:#1f8ded;--bf-primary-dark:#1273c5;--bf-bg-color:#fff;--bf-text-color:#1f2937;--bf-radius:12px}.bf-theme-intercom .bf-chat-window{border:1px solid #e5e7eb}.bf-theme-intercom .bf-header{background:#1f8ded;padding:24px 20px}.bf-theme-intercom .bf-header::before{display:none}.bf-theme-intercom .bf-message-text{border-radius:18px;font-size:15px}.bf-theme-intercom .bf-user-message .bf-message-text{background:#1f8ded;border-radius:18px 18px 4px 18px}.bf-theme-intercom .bf-bot-message .bf-message-text{background:#f3f4f6;color:#1f2937;border-radius:18px 18px 18px 4px}.bf-theme-gradient{--bf-primary-color:#667eea;--bf-primary-dark:#764ba2}.bf-theme-gradient .bf-chat-window{background:linear-gradient(180deg,#fff 0%,#f8f9ff 100%)}.bf-theme-gradient .bf-header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}.bf-theme-gradient .bf-user-message .bf-message-text{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}.bf-theme-gradient .bf-messages{background:0 0}.bf-theme-glassmorphism .bf-chat-window{background:rgba(255,255,255,.7);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.3)}.bf-theme-glassmorphism .bf-message-text{background:rgba(255,255,255,.8);backdrop-filter:blur(10px)}.bf-theme-glassmorphism .bf-user-message .bf-message-text{background:linear-gradient(135deg,var(--bf-primary-color),var(--bf-primary-dark));color:#fff!important}.bf-theme-dark{--bf-bg-color:#1f2937;--bf-text-color:#f9fafb;--bf-text-secondary:#9ca3af;--bf-border-color:#374151}.bf-theme-dark .bf-messages{background:linear-gradient(180deg,#111827 0%,#1f2937 100%)}.bf-theme-dark .bf-message-text{background:#374151;color:#f9fafb}.bf-theme-dark .bf-user-message .bf-message-text{background:linear-gradient(135deg,var(--bf-primary-color),var(--bf-primary-dark));color:#fff!important}.bf-theme-dark .bf-input{background:#374151;color:#f9fafb;border-color:#4b5563}.bf-theme-dark .bf-input::placeholder{color:#9ca3af}.bf-theme-dark .bf-footer{background:#1f2937;border-color:#374151}.bf-theme-minimal{--bf-primary-color:#000;--bf-primary-dark:#1f2937;--bf-radius:8px}.bf-theme-minimal .bf-header{background:#000}.bf-theme-minimal .bf-header::before{display:none}.bf-theme-minimal .bf-message-text{border-radius:8px}.bf-theme-minimal .bf-user-message .bf-message-text{background:#000}.bf-theme-minimal .bf-bot-message .bf-message-text{background:#f3f4f6;color:#1f2937}`,document.head.appendChild(t)}createWidget(){const t=document.createElement("div");t.id="beautiful-flowise-container",t.className=`bf-container bf-${this.config.position} bf-theme-${this.config.theme}`,t.style.setProperty("--bf-primary-color",this.config.primaryColor),t.innerHTML=`
-                <button class="bf-chat-button" id="bf-toggle-button" aria-label="Open chat">
+/* === STYLES === */
+window.BEAUTIFUL_FLOWISE_STYLES = `
+:root {
+    --bf-primary-color: #6366f1;
+    --bf-primary-dark: #4f46e5;
+    --bf-bg-color: #ffffff;
+    --bf-text-color: #1f2937;
+    --bf-text-secondary: #6b7280;
+    --bf-border-color: #e5e7eb;
+    --bf-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    --bf-radius: 16px;
+}
+.bf-container * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+.bf-container {
+    position: fixed;
+    z-index: 999999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+.bf-bottom-right { bottom: 20px; right: 20px; }
+.bf-bottom-left { bottom: 20px; left: 20px; }
+.bf-chat-button {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
+    border: none; cursor: pointer; box-shadow: var(--bf-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex; align-items: center; justify-content: center;
+}
+.bf-chat-button:hover { transform: scale(1.1); }
+.bf-button-icon { width: 28px; height: 28px; color: white; stroke-width: 2; }
+.bf-chat-window {
+    position: absolute; bottom: 80px; right: 0;
+    width: 400px; max-width: calc(100vw - 40px);
+    height: 600px; max-height: calc(100vh - 120px);
+    background: var(--bf-bg-color); border-radius: var(--bf-radius);
+    box-shadow: var(--bf-shadow); display: flex; flex-direction: column;
+    overflow: hidden; animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.bf-header {
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
+    color: white; padding: 20px; display: flex;
+    align-items: center; justify-content: space-between;
+}
+.bf-header-content { display: flex; align-items: center; gap: 12px; z-index: 1; }
+.bf-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.bf-title { font-size: 16px; font-weight: 600; }
+.bf-subtitle { font-size: 12px; opacity: 0.9; }
+.bf-minimize-btn {
+    background: rgba(255, 255, 255, 0.2); border: none; color: white;
+    width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+    font-size: 24px; display: flex; align-items: center; justify-content: center;
+}
+.bf-messages {
+    flex: 1; overflow-y: auto; padding: 20px;
+    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+    display: flex; flex-direction: column; gap: 16px;
+}
+.bf-messages::-webkit-scrollbar { width: 6px; }
+.bf-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.bf-message { display: flex; gap: 10px; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.bf-bot-message { align-self: flex-start; }
+.bf-user-message { align-self: flex-end; flex-direction: row-reverse; }
+.bf-message-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+}
+.bf-message-content { max-width: 75%; min-width: 60px; }
+.bf-message-text {
+    background: white; padding: 12px 16px; border-radius: 16px;
+    color: var(--bf-text-color); font-size: 14px; line-height: 1.6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    word-wrap: break-word; word-break: break-word;
+}
+.bf-bot-message .bf-message-text strong { font-weight: 600; }
+.bf-bot-message .bf-message-text code {
+    background: #f3f4f6; padding: 2px 6px; border-radius: 4px;
+    font-family: 'Courier New', monospace; font-size: 13px; color: #be123c;
+}
+.bf-bot-message .bf-message-text pre {
+    background: #1f2937; color: #f9fafb; padding: 12px;
+    border-radius: 8px; overflow-x: auto; margin: 8px 0;
+}
+.bf-bot-message .bf-message-text pre code { background: transparent; padding: 0; color: #f9fafb; }
+.bf-bot-message .bf-message-text ul, .bf-bot-message .bf-message-text ol { margin: 8px 0; padding-left: 20px; }
+.bf-bot-message .bf-message-text li { margin: 4px 0; }
+.bf-user-message .bf-message-text {
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
+    color: #ffffff !important;
+}
+.bf-message-time { font-size: 11px; color: var(--bf-text-secondary); margin-top: 4px; }
+.bf-typing { display: flex; align-items: center; gap: 10px; padding: 0 20px 10px; }
+.bf-typing-dots {
+    background: white; padding: 12px 16px; border-radius: 16px;
+    display: flex; gap: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.bf-typing-dots span {
+    width: 8px; height: 8px; background: #cbd5e1; border-radius: 50%;
+    animation: typing 1.4s ease-in-out infinite;
+}
+.bf-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.bf-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-10px); opacity: 1; } }
+.bf-input-container {
+    padding: 16px; background: white; border-top: 1px solid var(--bf-border-color);
+    display: flex; gap: 10px; align-items: flex-end;
+}
+.bf-input {
+    flex: 1; border: 2px solid var(--bf-border-color); border-radius: 12px;
+    padding: 12px 16px; font-size: 14px; font-family: inherit;
+    resize: none; outline: none; max-height: 120px; min-height: 44px;
+}
+.bf-input:focus { border-color: var(--bf-primary-color); }
+.bf-send-btn {
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
+    color: white; border: none; border-radius: 12px;
+    width: 44px; height: 44px; cursor: pointer; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+}
+.bf-send-btn:hover { transform: scale(1.05); }
+.bf-footer { padding: 8px; text-align: center; background: #f9fafb; }
+.bf-branding { font-size: 11px; color: #6b7280; text-decoration: none; }
+`;
+
+/* === JAVASCRIPT === */
+(function() {
+    'use strict';
+
+    const defaults = {
+        theme: 'modern',
+        primaryColor: '#6366f1',
+        position: 'bottom-right',
+        title: 'AI Assistant',
+        subtitle: 'Online',
+        welcomeMessage: 'Hi! How can I help you today?',
+        placeholder: 'Type your message...',
+        sendButtonText: '➤',
+        showTimestamp: true,
+        enableMarkdown: true,
+        debug: false,
+        avatar: '🤖'
+    };
+
+    class BeautifulFlowiseChat {
+        constructor(config) {
+            this.config = { ...defaults, ...config };
+            this.chatflowid = config.chatflowid;
+            this.apiHost = config.apiHost;
+            this.conversationHistory = [];
+            this.isOpen = false;
+            this.init();
+        }
+
+        init() {
+            this.injectStyles();
+            this.createWidget();
+            this.attachEventListeners();
+        }
+
+        log(...args) {
+            if (this.config.debug) console.log('[BeautifulFlowise]', ...args);
+        }
+
+        injectStyles() {
+            if (document.getElementById('beautiful-flowise-styles')) return;
+            const styleSheet = document.createElement('style');
+            styleSheet.id = 'beautiful-flowise-styles';
+            styleSheet.textContent = window.BEAUTIFUL_FLOWISE_STYLES || '';
+            document.head.appendChild(styleSheet);
+        }
+
+        createWidget() {
+            const container = document.createElement('div');
+            container.id = 'beautiful-flowise-container';
+            container.className = `bf-container bf-${this.config.position} bf-theme-${this.config.theme}`;
+            container.style.setProperty('--bf-primary-color', this.config.primaryColor);
+            
+            container.innerHTML = `
+                <button class="bf-chat-button" id="bf-toggle-button">
                     <svg class="bf-button-icon bf-button-open" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
@@ -21,51 +209,147 @@
                                 <div class="bf-subtitle">${this.config.subtitle}</div>
                             </div>
                         </div>
-                        <button class="bf-minimize-btn" id="bf-minimize" aria-label="Minimize chat">\u2212</button>
+                        <button class="bf-minimize-btn" id="bf-minimize">−</button>
                     </div>
                     <div class="bf-messages" id="bf-messages">
-                        ${this.config.welcomeMessage?`
-                        <div class="bf-message bf-bot-message">
+                        ${this.config.welcomeMessage ? `<div class="bf-message bf-bot-message">
                             <div class="bf-message-avatar">${this.config.avatar}</div>
                             <div class="bf-message-content">
-                                <div class="bf-message-text">${this.config.welcomeMessage}</div>
-                                ${this.config.showTimestamp?`<div class="bf-message-time">${this.getTimeString()}</div>`:""}
+                                <div class="bf-message-text">${this.formatMessage(this.config.welcomeMessage)}</div>
+                                ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
                             </div>
-                        </div>`:""}
+                        </div>` : ''}
                     </div>
                     <div class="bf-typing" id="bf-typing" style="display: none;">
-                        <div class="bf-typing-avatar">${this.config.avatar}</div>
-                        <div class="bf-typing-dots">
-                            <span></span><span></span><span></span>
-                        </div>
+                        <div class="bf-message-avatar">${this.config.avatar}</div>
+                        <div class="bf-typing-dots"><span></span><span></span><span></span></div>
                     </div>
                     <div class="bf-input-container">
-                        <textarea 
-                            class="bf-input" 
-                            id="bf-input" 
-                            placeholder="${this.config.placeholder}"
-                            rows="1"
-                        ></textarea>
-                        <button class="bf-send-btn" id="bf-send" aria-label="Send message">
-                            ${this.config.sendButtonText}
-                        </button>
+                        <textarea class="bf-input" id="bf-input" placeholder="${this.config.placeholder}" rows="1"></textarea>
+                        <button class="bf-send-btn" id="bf-send">${this.config.sendButtonText}</button>
                     </div>
                     <div class="bf-footer">
-                        <a href="https://github.com/unknownfriend00007/beautiful-flowise-chat" target="_blank" class="bf-branding">
-                            Powered by Beautiful Flowise Chat
-                        </a>
+                        <a href="https://github.com/unknownfriend00007/beautiful-flowise-chat" target="_blank" class="bf-branding">Powered by Beautiful Flowise Chat</a>
                     </div>
                 </div>
-            `,document.body.appendChild(t)}attachEventListeners(){const t=document.getElementById("bf-toggle-button"),e=document.getElementById("bf-minimize"),s=document.getElementById("bf-send"),i=document.getElementById("bf-input");t.addEventListener("click",(()=>this.toggleChat())),e.addEventListener("click",(()=>this.toggleChat())),s.addEventListener("click",(()=>this.sendMessage())),i.addEventListener("keydown",(t=>{"Enter"===t.key&&!t.shiftKey&&(t.preventDefault(),this.sendMessage())})),i.addEventListener("input",(()=>{i.style.height="auto",i.style.height=Math.min(i.scrollHeight,120)+"px"}))}toggleChat(){this.isOpen=!this.isOpen;const t=document.getElementById("bf-chat-window"),e=document.querySelector(".bf-button-open"),s=document.querySelector(".bf-button-close");this.isOpen?(t.style.display="flex",e.style.display="none",s.style.display="block",document.getElementById("bf-input").focus()):(t.style.display="none",e.style.display="block",s.style.display="none")}async sendMessage(){const t=document.getElementById("bf-input"),e=t.value.trim();if(!e)return;this.addMessage(e,"user"),t.value="",t.style.height="auto",this.config.enableStreaming||this.showTyping(!0);try{this.config.enableStreaming?await this.sendMessageWithStreaming(e):await this.sendMessageWithoutStreaming(e)}catch(t){console.error("Flowise API Error:",t),this.showTyping(!1),this.addMessage("Sorry, something went wrong. Please try again.","bot",!0)}}async sendMessageWithStreaming(t){const e=this.createStreamingMessage();try{const s=await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:t,streaming:!0,history:this.conversationHistory})});if(!s.ok)throw new Error("API request failed");const i=s.body.getReader(),a=new TextDecoder;let n="";for(;;){const{done:t,value:s}=await i.read();if(t)break;const r=a.decode(s,{stream:!0}).split("\n");for(const t of r)if(t.startsWith("data: "))try{const s=JSON.parse(t.substring(6));"token"===s.event&&s.data&&(n+=s.data,this.updateStreamingMessage(e,n))}catch(t){}}this.conversationHistory.push([t,n]),this.currentStreamingMessage=null}catch(s){console.warn("Streaming failed, falling back to non-streaming:",s),this.removeStreamingMessage(e),await this.sendMessageWithoutStreaming(t)}}async sendMessageWithoutStreaming(t){const e=await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:t,history:this.conversationHistory})});if(!e.ok)throw new Error("API request failed");const s=await e.json();this.showTyping(!1);const i=s.text||s.answer||s.response||"Sorry, I could not process your request.";this.addMessage(i,"bot"),this.conversationHistory.push([t,i])}createStreamingMessage(){const t=document.getElementById("bf-messages"),e="streaming-"+Date.now(),s=document.createElement("div");return s.id=e,s.className="bf-message bf-bot-message bf-streaming",s.innerHTML=`
-                <div class="bf-message-avatar">${this.config.avatar}</div>
+            `;
+            document.body.appendChild(container);
+        }
+
+        attachEventListeners() {
+            document.getElementById('bf-toggle-button').addEventListener('click', () => this.toggleChat());
+            document.getElementById('bf-minimize').addEventListener('click', () => this.toggleChat());
+            document.getElementById('bf-send').addEventListener('click', () => this.sendMessage());
+            const input = document.getElementById('bf-input');
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+        }
+
+        toggleChat() {
+            this.isOpen = !this.isOpen;
+            const chatWindow = document.getElementById('bf-chat-window');
+            const openIcon = document.querySelector('.bf-button-open');
+            const closeIcon = document.querySelector('.bf-button-close');
+            if (this.isOpen) {
+                chatWindow.style.display = 'flex';
+                openIcon.style.display = 'none';
+                closeIcon.style.display = 'block';
+                document.getElementById('bf-input').focus();
+            } else {
+                chatWindow.style.display = 'none';
+                openIcon.style.display = 'block';
+                closeIcon.style.display = 'none';
+            }
+        }
+
+        async sendMessage() {
+            const input = document.getElementById('bf-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            this.addMessage(message, 'user');
+            input.value = '';
+            this.showTyping(true);
+
+            try {
+                this.log('Sending:', message);
+                const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: message, history: this.conversationHistory })
+                });
+
+                if (!response.ok) throw new Error(`API error: ${response.status}`);
+                
+                const data = await response.json();
+                this.log('Response:', data);
+                
+                const botMessage = data.text || data.answer || data.response || data.output || 'No response';
+                this.showTyping(false);
+                this.addMessage(botMessage, 'bot');
+                this.conversationHistory.push([message, botMessage]);
+            } catch (error) {
+                console.error('Error:', error);
+                this.showTyping(false);
+                this.addMessage('Sorry, something went wrong.', 'bot');
+            }
+        }
+
+        addMessage(text, sender) {
+            const messagesContainer = document.getElementById('bf-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `bf-message bf-${sender}-message`;
+            const formattedText = sender === 'bot' ? this.formatMessage(text) : this.escapeHtml(text);
+            messageDiv.innerHTML = `
+                ${sender === 'bot' ? `<div class="bf-message-avatar">${this.config.avatar}</div>` : ''}
                 <div class="bf-message-content">
-                    <div class="bf-message-text"><span class="bf-cursor">|</span></div>
-                    ${this.config.showTimestamp?`<div class="bf-message-time">${this.getTimeString()}</div>`:""}
+                    <div class="bf-message-text">${formattedText}</div>
+                    ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
                 </div>
-            `,t.appendChild(s),t.scrollTop=t.scrollHeight,this.currentStreamingMessage=e,e}updateStreamingMessage(t,e){const s=document.getElementById(t);if(!s)return;s.querySelector(".bf-message-text").innerHTML=this.escapeHtml(e)+'<span class="bf-cursor">|</span>';const i=document.getElementById("bf-messages");i.scrollTop=i.scrollHeight}removeStreamingMessage(t){const e=document.getElementById(t);e&&e.remove()}addMessage(t,e,s=!1){const i=document.getElementById("bf-messages"),a=document.createElement("div");a.className=`bf-message bf-${e}-message ${s?"bf-error":""}`,a.innerHTML=`
-                ${"bot"===e?`<div class="bf-message-avatar">${this.config.avatar}</div>`:""}
-                <div class="bf-message-content">
-                    <div class="bf-message-text">${this.escapeHtml(t)}</div>
-                    ${this.config.showTimestamp?`<div class="bf-message-time">${this.getTimeString()}</div>`:""}
-                </div>
-            `,i.appendChild(a),i.scrollTop=i.scrollHeight}showTyping(t){const e=document.getElementById("bf-typing");if(e.style.display=t?"flex":"none",t){const t=document.getElementById("bf-messages");t.scrollTop=t.scrollHeight}}getTimeString(){return(new Date).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}escapeHtml(t){const e=document.createElement("div");return e.textContent=t,e.innerHTML}}window.BeautifulFlowiseChat={init:function(t){if(!t.chatflowid||!t.apiHost)return console.error("BeautifulFlowiseChat: chatflowid and apiHost are required");return new e(t)},initFull:function(t){return t.position="fullscreen",this.init(t)}}})();
+            `;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        formatMessage(text) {
+            if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\n/g, '<br>');
+            let html = this.escapeHtml(text);
+            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/^(\d+\. .+)$/gm, '<li>$1</li>').replace(/(<li>\d+\. .+<\/li>\n?)+/g, '<ol>$&</ol>').replace(/<li>(\d+)\. (.+?)<\/li>/g, '<li>$2</li>');
+            html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>').replace(/(<li>.+<\/li>\n?)+/g, (m) => !m.includes('<ol>') ? '<ul>' + m + '</ul>' : m);
+            html = html.replace(/\n/g, '<br>');
+            return html;
+        }
+
+        showTyping(show) {
+            document.getElementById('bf-typing').style.display = show ? 'flex' : 'none';
+        }
+
+        getTimeString() {
+            return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    }
+
+    window.BeautifulFlowiseChat = {
+        init: function(config) {
+            if (!config.chatflowid || !config.apiHost) {
+                console.error('BeautifulFlowiseChat: chatflowid and apiHost required');
+                return;
+            }
+            return new BeautifulFlowiseChat(config);
+        }
+    };
+})();
