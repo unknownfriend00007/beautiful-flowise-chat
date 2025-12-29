@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.2.0
+ * Beautiful Flowise Chat Widget v1.3.0
  * A modern, customizable alternative to Flowise embed
  */
 
@@ -225,6 +225,7 @@
     animation: blink-cursor 1s step-end infinite;
     margin-left: 2px;
     font-weight: bold;
+    color: var(--bf-primary-color);
 }
 
 @keyframes blink-cursor {
@@ -330,6 +331,49 @@
     color: #6b7280;
     text-decoration: none;
 }
+
+/* THEMES */
+.bf-theme-cloudflare {
+    --bf-primary-color: #f38020;
+    --bf-primary-dark: #d96b0f;
+}
+
+.bf-theme-intercom {
+    --bf-primary-color: #1f8ded;
+    --bf-primary-dark: #1273c5;
+}
+
+.bf-theme-gradient {
+    --bf-primary-color: #667eea;
+    --bf-primary-dark: #764ba2;
+}
+
+.bf-theme-glassmorphism .bf-chat-window {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bf-theme-dark {
+    --bf-primary-color: #6366f1;
+    --bf-primary-dark: #4f46e5;
+}
+.bf-theme-dark .bf-chat-window { background: #1f2937; }
+.bf-theme-dark .bf-messages { background: #111827; }
+.bf-theme-dark .bf-message-text { background: #374151; color: #f9fafb; }
+.bf-theme-dark .bf-user-message .bf-message-text {
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
+    color: white;
+}
+.bf-theme-dark .bf-input { background: #374151; color: #f9fafb; border-color: #4b5563; }
+.bf-theme-dark .bf-input-container { background: #1f2937; border-top-color: #374151; }
+.bf-theme-dark .bf-footer { background: #1f2937; border-top-color: #374151; }
+.bf-theme-dark .bf-branding { color: #9ca3af; }
+
+.bf-theme-minimal {
+    --bf-primary-color: #000000;
+    --bf-primary-dark: #1f2937;
+}
     `;
 
     class BeautifulFlowiseChat {
@@ -347,6 +391,10 @@
             this.injectStyles();
             this.createWidget();
             this.attachEventListeners();
+        }
+
+        log(...args) {
+            if (this.config.debug) console.log('[BeautifulFlowise]', ...args);
         }
 
         injectStyles() {
@@ -456,24 +504,150 @@
             this.showTyping(true);
 
             try {
+                if (this.config.enableStreaming) {
+                    await this.sendWithStreaming(message);
+                } else {
+                    await this.sendWithoutStreaming(message);
+                }
+            } catch (error) {
+                this.log('Error:', error);
+                this.showTyping(false);
+                if (this.currentStreamingMessage) {
+                    document.getElementById(this.currentStreamingMessage)?.remove();
+                    this.currentStreamingMessage = null;
+                }
+                this.addMessage('Sorry, something went wrong.', 'bot');
+            }
+        }
+
+        async sendWithStreaming(message) {
+            try {
                 const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: message, history: this.conversationHistory })
+                    body: JSON.stringify({ question: message, streaming: true })
                 });
 
-                if (!response.ok) throw new Error('API request failed');
-                const data = await response.json();
-                this.showTyping(false);
+                if (!response.ok) throw new Error('API failed');
                 
-                const botMessage = data.text || data.answer || data.response || 'Sorry, no response.';
-                this.addMessage(botMessage, 'bot');
-                this.conversationHistory.push([message, botMessage]);
-            } catch (error) {
-                console.error('Error:', error);
+                const contentType = response.headers.get('content-type');
+                if (!contentType?.includes('text/event-stream')) {
+                    // Fallback to non-streaming
+                    const data = await response.json();
+                    this.showTyping(false);
+                    const botMessage = data.text || data.answer || data.response || 'No response';
+                    this.addMessage(botMessage, 'bot');
+                    this.conversationHistory.push([message, botMessage]);
+                    return;
+                }
+
                 this.showTyping(false);
-                this.addMessage('Sorry, something went wrong.', 'bot');
+                const messageId = this.createStreamingMessage();
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = '';
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.substring(6).trim();
+                            if (!dataStr || dataStr === '[DONE]') continue;
+                            
+                            try {
+                                const data = JSON.parse(dataStr);
+                                if (data.event === 'token' && data.data) {
+                                    fullText += data.data;
+                                    this.updateStreamingMessage(messageId, fullText);
+                                }
+                            } catch (e) {
+                                this.log('Parse error:', e);
+                            }
+                        }
+                    }
+                }
+
+                if (fullText) {
+                    this.finalizeStreamingMessage(messageId, fullText);
+                    this.conversationHistory.push([message, fullText]);
+                } else {
+                    throw new Error('No text streamed');
+                }
+
+            } catch (error) {
+                this.log('Streaming failed, falling back:', error);
+                if (this.currentStreamingMessage) {
+                    document.getElementById(this.currentStreamingMessage)?.remove();
+                    this.currentStreamingMessage = null;
+                }
+                await this.sendWithoutStreaming(message);
             }
+        }
+
+        async sendWithoutStreaming(message) {
+            const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: message })
+            });
+
+            if (!response.ok) throw new Error('API failed');
+            const data = await response.json();
+            this.showTyping(false);
+            
+            const botMessage = data.text || data.answer || data.response || 'No response';
+            this.addMessage(botMessage, 'bot');
+            this.conversationHistory.push([message, botMessage]);
+        }
+
+        createStreamingMessage() {
+            const messagesContainer = document.getElementById('bf-messages');
+            const messageId = 'streaming-' + Date.now();
+            const messageDiv = document.createElement('div');
+            messageDiv.id = messageId;
+            messageDiv.className = 'bf-message bf-bot-message bf-streaming';
+            
+            messageDiv.innerHTML = `
+                <div class="bf-message-avatar">${this.config.avatar}</div>
+                <div class="bf-message-content">
+                    <div class="bf-message-text"><span class="bf-cursor">|</span></div>
+                    ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            this.currentStreamingMessage = messageId;
+            return messageId;
+        }
+
+        updateStreamingMessage(messageId, text) {
+            const messageDiv = document.getElementById(messageId);
+            if (!messageDiv) return;
+
+            const textElement = messageDiv.querySelector('.bf-message-text');
+            textElement.innerHTML = this.formatMarkdown(text) + '<span class="bf-cursor">|</span>';
+            
+            const messagesContainer = document.getElementById('bf-messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        finalizeStreamingMessage(messageId, text) {
+            const messageDiv = document.getElementById(messageId);
+            if (!messageDiv) return;
+
+            messageDiv.classList.remove('bf-streaming');
+            const textElement = messageDiv.querySelector('.bf-message-text');
+            textElement.innerHTML = this.formatMarkdown(text);
+            this.currentStreamingMessage = null;
         }
 
         addMessage(text, sender) {
@@ -503,12 +677,23 @@
             html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => {
+                return match.includes('1.') ? '<ol>' + match + '</ol>' : match;
+            });
             html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-            html = html.replace(/(<li>.+<\/li>\n?)+/g, '<ul>$&</ul>');
+            html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => {
+                if (!match.includes('<ol>')) return '<ul>' + match + '</ul>';
+                return match;
+            });
             html = html.replace(/\n\n/g, '</p><p>');
             html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
             html = html.replace(/<p><\/p>/g, '');
+            html = html.replace(/<p>(<[uo]l>)/g, '$1');
+            html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<pre>)/g, '$1');
+            html = html.replace(/(<\/pre>)<\/p>/g, '$1');
             return html;
         }
 
