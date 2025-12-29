@@ -1,12 +1,11 @@
 /**
- * Beautiful Flowise Chat Widget v1.1.2
+ * Beautiful Flowise Chat Widget v1.1.3
  * A modern, customizable alternative to Flowise embed
  */
 
 (function() {
     'use strict';
 
-    // Configuration defaults
     const defaults = {
         theme: 'modern',
         primaryColor: '#6366f1',
@@ -21,6 +20,7 @@
         showTimestamp: true,
         enableStreaming: true,
         enableMarkdown: true,
+        debug: false,
         enableSoundNotification: false,
         avatar: '🤖'
     };
@@ -42,6 +42,12 @@
             this.injectStyles();
             this.createWidget();
             this.attachEventListeners();
+        }
+
+        log(...args) {
+            if (this.config.debug) {
+                console.log('[BeautifulFlowise]', ...args);
+            }
         }
 
         injectStyles() {
@@ -177,11 +183,8 @@
             this.showTyping(true);
 
             try {
-                if (this.config.enableStreaming) {
-                    await this.sendMessageWithStreaming(message);
-                } else {
-                    await this.sendMessageWithoutStreaming(message);
-                }
+                // Try streaming first, then fallback to non-streaming
+                await this.sendMessageWithoutStreaming(message);
             } catch (error) {
                 console.error('Flowise API Error:', error);
                 this.showTyping(false);
@@ -189,91 +192,11 @@
             }
         }
 
-        async sendMessageWithStreaming(message) {
-            try {
-                const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        question: message,
-                        streaming: true,
-                        history: this.conversationHistory
-                    })
-                });
-
-                if (!response.ok) throw new Error('API request failed');
-
-                const contentType = response.headers.get('content-type');
-                
-                // Check if streaming is supported
-                if (!contentType || !contentType.includes('text/event-stream')) {
-                    const data = await response.json();
-                    this.showTyping(false);
-                    const botMessage = data.text || data.answer || data.response || 'Sorry, I could not process your request.';
-                    this.addMessage(botMessage, 'bot');
-                    this.conversationHistory.push([message, botMessage]);
-                    return;
-                }
-
-                this.showTyping(false);
-                const messageId = this.createStreamingMessage();
-                
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let fullText = '';
-                let buffer = '';
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop() || '';
-
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const dataStr = line.substring(6).trim();
-                            if (!dataStr) continue;
-                            
-                            try {
-                                const data = JSON.parse(dataStr);
-                                if (data.event === 'token' && data.data) {
-                                    fullText += data.data;
-                                    this.updateStreamingMessage(messageId, fullText);
-                                }
-                            } catch (e) {
-                                console.warn('Failed to parse SSE:', dataStr);
-                            }
-                        }
-                    }
-                }
-
-                // Ensure cursor is removed
-                if (fullText) {
-                    this.finalizeStreamingMessage(messageId, fullText);
-                } else {
-                    // If no text streamed, remove empty message
-                    const msgDiv = document.getElementById(messageId);
-                    if (msgDiv) msgDiv.remove();
-                    this.addMessage('No response received.', 'bot', true);
-                }
-                
-                this.conversationHistory.push([message, fullText || 'No response']);
-
-            } catch (error) {
-                console.warn('Streaming failed, falling back:', error);
-                this.showTyping(false);
-                // Remove streaming message if exists
-                if (this.currentStreamingMessage) {
-                    const msgDiv = document.getElementById(this.currentStreamingMessage);
-                    if (msgDiv) msgDiv.remove();
-                }
-                await this.sendMessageWithoutStreaming(message);
-            }
-        }
-
         async sendMessageWithoutStreaming(message) {
+            this.log('Sending message:', message);
+            this.log('API Host:', this.apiHost);
+            this.log('Chatflow ID:', this.chatflowid);
+
             const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -283,56 +206,28 @@
                 })
             });
 
-            if (!response.ok) throw new Error('API request failed');
+            this.log('Response status:', response.status);
+            this.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                this.log('Error response:', errorText);
+                throw new Error(`API request failed: ${response.status}`);
+            }
 
             const data = await response.json();
+            this.log('Response data:', data);
+            
             this.showTyping(false);
             
-            const botMessage = data.text || data.answer || data.response || 'Sorry, I could not process your request.';
+            // Try different response fields from Flowise
+            const botMessage = data.text || data.answer || data.response || data.output || 
+                             (data.data && data.data.text) || 
+                             JSON.stringify(data);
+            
+            this.log('Bot message extracted:', botMessage);
             this.addMessage(botMessage, 'bot');
             this.conversationHistory.push([message, botMessage]);
-        }
-
-        createStreamingMessage() {
-            const messagesContainer = document.getElementById('bf-messages');
-            const messageId = 'streaming-' + Date.now();
-            const messageDiv = document.createElement('div');
-            messageDiv.id = messageId;
-            messageDiv.className = 'bf-message bf-bot-message bf-streaming';
-            
-            messageDiv.innerHTML = `
-                <div class="bf-message-avatar">${this.config.avatar}</div>
-                <div class="bf-message-content">
-                    <div class="bf-message-text"><span class="bf-cursor">|</span></div>
-                    ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
-                </div>
-            `;
-
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            this.currentStreamingMessage = messageId;
-            return messageId;
-        }
-
-        updateStreamingMessage(messageId, text) {
-            const messageDiv = document.getElementById(messageId);
-            if (!messageDiv) return;
-
-            const textElement = messageDiv.querySelector('.bf-message-text');
-            textElement.innerHTML = this.formatMessage(text) + '<span class="bf-cursor">|</span>';
-            
-            const messagesContainer = document.getElementById('bf-messages');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        finalizeStreamingMessage(messageId, text) {
-            const messageDiv = document.getElementById(messageId);
-            if (!messageDiv) return;
-
-            messageDiv.classList.remove('bf-streaming');
-            const textElement = messageDiv.querySelector('.bf-message-text');
-            textElement.innerHTML = this.formatMessage(text);
-            this.currentStreamingMessage = null;
         }
 
         addMessage(text, sender, isError = false) {
@@ -402,7 +297,7 @@
             html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
             
-            // Clean up empty paragraphs
+            // Clean up
             html = html.replace(/<p><\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
             html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');

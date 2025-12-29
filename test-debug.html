@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Beautiful Flowise Chat</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        
+        .debug-info {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .debug-info pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .warning h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+        
+        .warning p {
+            color: #78350f;
+            margin: 5px 0;
+        }
+        
+        .test-btn {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+        }
+        
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Mode - Beautiful Flowise Chat</h1>
+        
+        <div class="warning">
+            <h3>🚨 Debugging Enabled</h3>
+            <p>Open your browser's <strong>Developer Console</strong> (F12) to see detailed logs:</p>
+            <p>1. What URL is being called</p>
+            <p>2. What response is received</p>
+            <p>3. How the response is being parsed</p>
+            <p>4. Any errors that occur</p>
+        </div>
+        
+        <button class="test-btn" onclick="testAPI()">Test API Directly</button>
+        <button class="test-btn" onclick="clearLogs()">Clear Console</button>
+        
+        <h3>Console Output:</h3>
+        <div class="debug-info" id="console-output">
+            <pre>Waiting for interaction...</pre>
+        </div>
+        
+        <p style="margin-top: 30px; color: #6b7280;">
+            👉 The chat widget is in the bottom-right corner. Try sending a message and check the console!
+        </p>
+    </div>
+    
+    <!-- Load with debug mode ON -->
+    <script src="https://raw.githubusercontent.com/unknownfriend00007/beautiful-flowise-chat/main/src/styles.css"></script>
+    <script src="https://raw.githubusercontent.com/unknownfriend00007/beautiful-flowise-chat/main/src/chat.js"></script>
+    <script>
+        // Capture console logs
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addToConsole(type, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            const color = type === 'error' ? '#ef4444' : type === 'warn' ? '#f59e0b' : '#10b981';
+            consoleOutput.innerHTML += `<div style="color: ${color}; margin: 5px 0;">[${timestamp}] ${type.toUpperCase()}: ${message}</div>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole('log', ...args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole('error', ...args);
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole('warn', ...args);
+        };
+        
+        function clearLogs() {
+            consoleOutput.innerHTML = '<pre>Console cleared...</pre>';
+        }
+        
+        async function testAPI() {
+            console.log('===== TESTING FLOWISE API DIRECTLY =====');
+            try {
+                const apiHost = 'https://ruvatron-flowhybrid-3.hf.space';
+                const chatflowId = 'a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f';
+                const url = `${apiHost}/api/v1/prediction/${chatflowId}`;
+                
+                console.log('URL:', url);
+                console.log('Sending test message...');
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: 'Hi, tell me a joke',
+                        history: []
+                    })
+                });
+                
+                console.log('Status:', response.status);
+                console.log('Headers:', Object.fromEntries(response.headers.entries()));
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                console.log('Text field:', data.text);
+                console.log('Answer field:', data.answer);
+                console.log('Response field:', data.response);
+                
+            } catch (error) {
+                console.error('API Test Failed:', error);
+            }
+        }
+        
+        // Initialize with DEBUG MODE ON
+        console.log('Initializing Beautiful Flowise Chat with debug mode...');
+        BeautifulFlowiseChat.init({
+            chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
+            apiHost: "https://ruvatron-flowhybrid-3.hf.space",
+            theme: "modern",
+            debug: true,  // ENABLE DEBUG LOGGING
+            enableStreaming: false,  // DISABLE streaming for now
+            enableMarkdown: true
+        });
+    </script>
+</body>
+</html>
