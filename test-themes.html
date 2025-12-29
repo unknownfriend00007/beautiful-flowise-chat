@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful Flowise Chat - Theme Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .version {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .theme-btn {
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .theme-btn:hover {
+            border-color: #6366f1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        
+        .theme-btn.active {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border-color: #6366f1;
+        }
+        
+        .info-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .info-box p {
+            color: #78350f;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        
+        .info-box code {
+            background: #fffbeb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .success-box h3 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        
+        .success-box ul {
+            color: #047857;
+            padding-left: 20px;
+        }
+        
+        .success-box li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Beautiful Flowise Chat</h1>
+        <p class="version">Version 1.1.1 - Theme Tester</p>
+        
+        <div class="info-box">
+            <h3>⚠️ CDN Cache Issue?</h3>
+            <p><strong>This page uses cache-busting</strong> to load the latest version immediately.</p>
+            <p>If you're using jsDelivr CDN in production, use one of these methods:</p>
+            <p>1. <strong>Commit SHA:</strong> <code>@39e06c6/dist/chat.js</code></p>
+            <p>2. <strong>Purge cache:</strong> Visit <code>https://purge.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@main/dist/chat.js</code></p>
+            <p>3. <strong>Wait 12-24 hours</strong> for automatic cache refresh</p>
+        </div>
+        
+        <h2 style="margin-bottom: 15px;">Select Theme:</h2>
+        <div class="theme-grid">
+            <button class="theme-btn active" onclick="changeTheme('modern')">Modern</button>
+            <button class="theme-btn" onclick="changeTheme('cloudflare')">Cloudflare</button>
+            <button class="theme-btn" onclick="changeTheme('intercom')">Intercom</button>
+            <button class="theme-btn" onclick="changeTheme('gradient')">Gradient</button>
+            <button class="theme-btn" onclick="changeTheme('glassmorphism')">Glassmorphism</button>
+            <button class="theme-btn" onclick="changeTheme('dark')">Dark</button>
+            <button class="theme-btn" onclick="changeTheme('minimal')">Minimal</button>
+        </div>
+        
+        <div class="success-box">
+            <h3>✅ v1.1.1 Fixes Applied:</h3>
+            <ul>
+                <li><strong>Fixed:</strong> "hi" text splitting across lines (added min-width)</li>
+                <li><strong>Fixed:</strong> User message visibility (white on white)</li>
+                <li><strong>Fixed:</strong> Streaming fallback when API doesn't support it</li>
+                <li><strong>Fixed:</strong> Cursor removal after streaming completes</li>
+                <li><strong>Improved:</strong> Better error messages and console logging</li>
+            </ul>
+        </div>
+        
+        <p style="margin-top: 30px; color: #6b7280; text-align: center;">
+            👉 Look in the bottom-right corner to test the chat widget!
+        </p>
+    </div>
+    
+    <!-- Load Beautiful Flowise Chat with cache-busting -->
+    <script src="https://raw.githubusercontent.com/unknownfriend00007/beautiful-flowise-chat/main/dist/chat.js?nocache=1"></script>
+    <script>
+        let currentChat = null;
+        
+        function changeTheme(theme) {
+            // Remove existing chat
+            const existingContainer = document.getElementById('beautiful-flowise-container');
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+            
+            // Update active button
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Initialize new chat with selected theme
+            currentChat = BeautifulFlowiseChat.init({
+                chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
+                apiHost: "https://ruvatron-flowhybrid-3.hf.space",
+                theme: theme,
+                enableStreaming: true,
+                title: theme.charAt(0).toUpperCase() + theme.slice(1) + " Theme",
+                welcomeMessage: `Testing ${theme} theme! Try sending a message.`
+            });
+        }
+        
+        // Initialize with default theme
+        changeTheme('modern');
+    </script>
+</body>
+</html>
