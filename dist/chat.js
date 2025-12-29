@@ -1,6 +1,6 @@
 /**
- * Beautiful Flowise Chat Widget v1.4.0
- * Buttery smooth streaming inspired by PRIMUS-V2
+ * Beautiful Flowise Chat Widget v1.4.1
+ * Buttery smooth streaming with loading animation
  */
 
 (function() {
@@ -224,6 +224,36 @@
 .bf-bot-message .bf-message-text h1 { font-size: 18px; }
 .bf-bot-message .bf-message-text h2 { font-size: 16px; }
 .bf-bot-message .bf-message-text h3 { font-size: 15px; }
+
+/* Loading dots animation */
+.bf-loading-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bf-loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--bf-primary-color);
+    border-radius: 50%;
+    animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+.bf-loading-dots span:nth-child(1) { animation-delay: 0s; }
+.bf-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.bf-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulse-dot {
+    0%, 60%, 100% { 
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    30% { 
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
 
 .bf-streaming .bf-cursor {
     display: inline;
@@ -486,7 +516,7 @@
             input.style.height = 'auto';
             sendBtn.disabled = true;
 
-            // Create placeholder bot message immediately (PRIMUS-V2 style!)
+            // Create placeholder bot message with loading animation
             const botMessageId = this.createPlaceholderMessage();
             this.currentStreamingMessageId = botMessageId;
 
@@ -531,6 +561,7 @@
                 let fullText = '';
                 let buffer = '';
                 let streamEnded = false;
+                let firstTokenReceived = false;
 
                 while (!streamEnded) {
                     const { value, done } = await reader.read();
@@ -542,7 +573,6 @@
                     buffer += decoder.decode(value, { stream: true });
                     let idx;
                     
-                    // Process complete lines from buffer (PRIMUS-V2 technique!)
                     while ((idx = buffer.indexOf('\n')) !== -1) {
                         const line = buffer.slice(0, idx).trim();
                         buffer = buffer.slice(idx + 1);
@@ -576,13 +606,16 @@
                         }
 
                         if (token) {
+                            if (!firstTokenReceived) {
+                                firstTokenReceived = true;
+                                // Remove loading animation on first token
+                            }
                             fullText += token;
                             this.updatePlaceholderMessage(botMessageId, fullText, true);
                         }
                     }
                 }
 
-                // Finalize with markdown formatting
                 if (fullText) {
                     this.updatePlaceholderMessage(botMessageId, fullText, false);
                     this.conversationHistory.push([message, fullText]);
@@ -616,11 +649,17 @@
             const messageId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
             const messageDiv = document.createElement('div');
             messageDiv.id = messageId;
-            messageDiv.className = 'bf-message bf-bot-message bf-streaming';
+            messageDiv.className = 'bf-message bf-bot-message';
             
             messageDiv.innerHTML = `
                 <div class="bf-message-content">
-                    <div class="bf-message-text"></div>
+                    <div class="bf-message-text">
+                        <div class="bf-loading-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
                     ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
                 </div>
             `;
@@ -672,45 +711,26 @@
             
             let html = this.escapeHtml(text);
             
-            // Code blocks
             html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-            
-            // Inline code
             html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-            
-            // Headers
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-            
-            // Bold
             html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-            
-            // Italic
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-            
-            // Links
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-            
-            // Numbered lists
             html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
             html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => '<ol>' + match + '</ol>');
-            
-            // Bullet lists
             html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
             html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => {
                 if (!match.includes('<ol>')) return '<ul>' + match + '</ul>';
                 return match;
             });
-            
-            // Paragraphs
             html = html.replace(/\n\n/g, '</p><p>');
             html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
-            
-            // Cleanup
             html = html.replace(/<p><\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
             html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
