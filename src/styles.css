@@ -1,4 +1,4 @@
-/* Beautiful Flowise Chat Widget Styles v1.1.1 */
+/* Beautiful Flowise Chat Widget Styles v1.1.2 */
 
 window.BEAUTIFUL_FLOWISE_STYLES = `
 :root {
@@ -34,7 +34,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     left: 20px;
 }
 
-/* Chat Button */
 .bf-chat-button {
     width: 60px;
     height: 60px;
@@ -68,7 +67,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     transition: transform 0.3s ease;
 }
 
-/* Chat Window */
 .bf-chat-window {
     position: absolute;
     bottom: 80px;
@@ -97,7 +95,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     }
 }
 
-/* Header */
 .bf-header {
     background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
     color: white;
@@ -197,7 +194,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* Messages Container */
 .bf-messages {
     flex: 1;
     overflow-y: auto;
@@ -225,7 +221,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     background: #94a3b8;
 }
 
-/* Message */
 .bf-message {
     display: flex;
     gap: 10px;
@@ -269,16 +264,94 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     border-radius: 16px;
     color: var(--bf-text-color);
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     word-wrap: break-word;
     word-break: break-word;
-    white-space: pre-wrap;
-    min-width: 40px;
-    display: inline-block;
 }
 
-/* FIX: User message with proper contrast */
+/* Markdown formatting in bot messages */
+.bf-bot-message .bf-message-text p {
+    margin: 0 0 8px 0;
+}
+
+.bf-bot-message .bf-message-text p:last-child {
+    margin-bottom: 0;
+}
+
+.bf-bot-message .bf-message-text strong {
+    font-weight: 600;
+    color: var(--bf-text-color);
+}
+
+.bf-bot-message .bf-message-text em {
+    font-style: italic;
+}
+
+.bf-bot-message .bf-message-text code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #be123c;
+}
+
+.bf-bot-message .bf-message-text pre {
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.bf-bot-message .bf-message-text pre code {
+    background: transparent;
+    padding: 0;
+    color: #f9fafb;
+    font-size: 13px;
+}
+
+.bf-bot-message .bf-message-text ul,
+.bf-bot-message .bf-message-text ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.bf-bot-message .bf-message-text li {
+    margin: 4px 0;
+}
+
+.bf-bot-message .bf-message-text a {
+    color: var(--bf-primary-color);
+    text-decoration: none;
+    border-bottom: 1px solid var(--bf-primary-color);
+}
+
+.bf-bot-message .bf-message-text a:hover {
+    opacity: 0.8;
+}
+
+.bf-bot-message .bf-message-text h1,
+.bf-bot-message .bf-message-text h2,
+.bf-bot-message .bf-message-text h3 {
+    margin: 12px 0 8px 0;
+    font-weight: 600;
+}
+
+.bf-bot-message .bf-message-text h1 {
+    font-size: 18px;
+}
+
+.bf-bot-message .bf-message-text h2 {
+    font-size: 16px;
+}
+
+.bf-bot-message .bf-message-text h3 {
+    font-size: 14px;
+}
+
 .bf-user-message .bf-message-text {
     background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
     color: #ffffff !important;
@@ -297,7 +370,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     color: #991b1b;
 }
 
-/* Streaming cursor animation */
 .bf-streaming .bf-cursor {
     display: inline-block;
     animation: blink-cursor 1s step-end infinite;
@@ -311,7 +383,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     51%, 100% { opacity: 0; }
 }
 
-/* Typing Indicator */
 .bf-typing {
     display: flex;
     align-items: center;
@@ -356,7 +427,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     30% { transform: translateY(-10px); opacity: 1; }
 }
 
-/* Input Area */
 .bf-input-container {
     padding: 16px;
     background: white;
@@ -410,7 +480,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     transform: scale(0.95);
 }
 
-/* Footer */
 .bf-footer {
     padding: 8px;
     text-align: center;
@@ -429,7 +498,6 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     color: var(--bf-primary-color);
 }
 
-/* Responsive */
 @media (max-width: 480px) {
     .bf-chat-window {
         width: calc(100vw - 40px);
@@ -437,72 +505,31 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     }
 }
 
-/* ========== PROFESSIONAL THEMES ========== */
+/* PROFESSIONAL THEMES */
 
-/* Theme: Cloudflare-inspired */
 .bf-theme-cloudflare {
     --bf-primary-color: #f38020;
     --bf-primary-dark: #d96b0f;
-    --bf-bg-color: #ffffff;
-    --bf-text-color: #1f2937;
 }
 
 .bf-theme-cloudflare .bf-header {
     background: linear-gradient(135deg, #f38020 0%, #f6821f 100%);
 }
 
-.bf-theme-cloudflare .bf-messages {
-    background: #fafafa;
-}
-
-.bf-theme-cloudflare .bf-message-text {
-    border: 1px solid #f3f4f6;
-}
-
-.bf-theme-cloudflare .bf-user-message .bf-message-text {
-    background: linear-gradient(135deg, #f38020, #d96b0f);
-    border: none;
-}
-
-/* Theme: Intercom-style */
 .bf-theme-intercom {
     --bf-primary-color: #1f8ded;
     --bf-primary-dark: #1273c5;
-    --bf-bg-color: #ffffff;
-    --bf-text-color: #1f2937;
     --bf-radius: 12px;
-}
-
-.bf-theme-intercom .bf-chat-window {
-    border: 1px solid #e5e7eb;
 }
 
 .bf-theme-intercom .bf-header {
     background: #1f8ded;
-    padding: 24px 20px;
 }
 
 .bf-theme-intercom .bf-header::before {
     display: none;
 }
 
-.bf-theme-intercom .bf-message-text {
-    border-radius: 18px;
-    font-size: 15px;
-}
-
-.bf-theme-intercom .bf-user-message .bf-message-text {
-    background: #1f8ded;
-    border-radius: 18px 18px 4px 18px;
-}
-
-.bf-theme-intercom .bf-bot-message .bf-message-text {
-    background: #f3f4f6;
-    color: #1f2937;
-    border-radius: 18px 18px 18px 4px;
-}
-
-/* Theme: Gradient Modern */
 .bf-theme-gradient {
     --bf-primary-color: #667eea;
     --bf-primary-dark: #764ba2;
@@ -512,36 +539,12 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
 }
 
-.bf-theme-gradient .bf-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.bf-theme-gradient .bf-user-message .bf-message-text {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.bf-theme-gradient .bf-messages {
-    background: transparent;
-}
-
-/* Theme: Glassmorphism */
 .bf-theme-glassmorphism .bf-chat-window {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.bf-theme-glassmorphism .bf-message-text {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-}
-
-.bf-theme-glassmorphism .bf-user-message .bf-message-text {
-    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
-    color: white !important;
-}
-
-/* Theme: Dark */
 .bf-theme-dark {
     --bf-bg-color: #1f2937;
     --bf-text-color: #f9fafb;
@@ -569,16 +572,11 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
     border-color: #4b5563;
 }
 
-.bf-theme-dark .bf-input::placeholder {
-    color: #9ca3af;
+.bf-theme-dark .bf-bot-message .bf-message-text code {
+    background: #4b5563;
+    color: #fbbf24;
 }
 
-.bf-theme-dark .bf-footer {
-    background: #1f2937;
-    border-color: #374151;
-}
-
-/* Theme: Minimal */
 .bf-theme-minimal {
     --bf-primary-color: #000000;
     --bf-primary-dark: #1f2937;
@@ -591,18 +589,5 @@ window.BEAUTIFUL_FLOWISE_STYLES = `
 
 .bf-theme-minimal .bf-header::before {
     display: none;
-}
-
-.bf-theme-minimal .bf-message-text {
-    border-radius: 8px;
-}
-
-.bf-theme-minimal .bf-user-message .bf-message-text {
-    background: #000000;
-}
-
-.bf-theme-minimal .bf-bot-message .bf-message-text {
-    background: #f3f4f6;
-    color: #1f2937;
 }
 `;

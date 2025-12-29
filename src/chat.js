@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.1.1
+ * Beautiful Flowise Chat Widget v1.1.2
  * A modern, customizable alternative to Flowise embed
  */
 
@@ -20,6 +20,7 @@
         sendButtonText: '➤',
         showTimestamp: true,
         enableStreaming: true,
+        enableMarkdown: true,
         enableSoundNotification: false,
         avatar: '🤖'
     };
@@ -59,7 +60,6 @@
             container.style.setProperty('--bf-primary-color', this.config.primaryColor);
             
             container.innerHTML = `
-                <!-- Chat Button -->
                 <button class="bf-chat-button" id="bf-toggle-button" aria-label="Open chat">
                     <svg class="bf-button-icon bf-button-open" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -70,9 +70,7 @@
                     </svg>
                 </button>
 
-                <!-- Chat Window -->
                 <div class="bf-chat-window" id="bf-chat-window" style="display: none;">
-                    <!-- Header -->
                     <div class="bf-header">
                         <div class="bf-header-content">
                             <div class="bf-avatar">${this.config.avatar}</div>
@@ -84,19 +82,17 @@
                         <button class="bf-minimize-btn" id="bf-minimize" aria-label="Minimize chat">−</button>
                     </div>
 
-                    <!-- Messages Container -->
                     <div class="bf-messages" id="bf-messages">
                         ${this.config.welcomeMessage ? `
                         <div class="bf-message bf-bot-message">
                             <div class="bf-message-avatar">${this.config.avatar}</div>
                             <div class="bf-message-content">
-                                <div class="bf-message-text">${this.config.welcomeMessage}</div>
+                                <div class="bf-message-text">${this.formatMessage(this.config.welcomeMessage)}</div>
                                 ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
                             </div>
                         </div>` : ''}
                     </div>
 
-                    <!-- Typing Indicator -->
                     <div class="bf-typing" id="bf-typing" style="display: none;">
                         <div class="bf-typing-avatar">${this.config.avatar}</div>
                         <div class="bf-typing-dots">
@@ -104,7 +100,6 @@
                         </div>
                     </div>
 
-                    <!-- Input Area -->
                     <div class="bf-input-container">
                         <textarea 
                             class="bf-input" 
@@ -117,7 +112,6 @@
                         </button>
                     </div>
 
-                    <!-- Powered By -->
                     <div class="bf-footer">
                         <a href="https://github.com/unknownfriend00007/beautiful-flowise-chat" target="_blank" class="bf-branding">
                             Powered by Beautiful Flowise Chat
@@ -146,7 +140,6 @@
                 }
             });
 
-            // Auto-resize textarea
             input.addEventListener('input', () => {
                 input.style.height = 'auto';
                 input.style.height = Math.min(input.scrollHeight, 120) + 'px';
@@ -177,12 +170,10 @@
             
             if (!message) return;
 
-            // Add user message to UI
             this.addMessage(message, 'user');
             input.value = '';
             input.style.height = 'auto';
 
-            // Always show typing indicator first
             this.showTyping(true);
 
             try {
@@ -202,9 +193,7 @@
             try {
                 const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         question: message,
                         streaming: true,
@@ -214,10 +203,10 @@
 
                 if (!response.ok) throw new Error('API request failed');
 
-                // Check if response is streaming
                 const contentType = response.headers.get('content-type');
+                
+                // Check if streaming is supported
                 if (!contentType || !contentType.includes('text/event-stream')) {
-                    // Fallback to non-streaming
                     const data = await response.json();
                     this.showTyping(false);
                     const botMessage = data.text || data.answer || data.response || 'Sorry, I could not process your request.';
@@ -226,45 +215,60 @@
                     return;
                 }
 
-                // Hide typing, create streaming message
                 this.showTyping(false);
                 const messageId = this.createStreamingMessage();
                 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let fullText = '';
+                let buffer = '';
 
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
 
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
+                            const dataStr = line.substring(6).trim();
+                            if (!dataStr) continue;
+                            
                             try {
-                                const data = JSON.parse(line.substring(6));
+                                const data = JSON.parse(dataStr);
                                 if (data.event === 'token' && data.data) {
                                     fullText += data.data;
                                     this.updateStreamingMessage(messageId, fullText);
                                 }
                             } catch (e) {
-                                // Skip invalid JSON
+                                console.warn('Failed to parse SSE:', dataStr);
                             }
                         }
                     }
                 }
 
-                // Finalize streaming message
-                this.finalizeStreamingMessage(messageId);
+                // Ensure cursor is removed
+                if (fullText) {
+                    this.finalizeStreamingMessage(messageId, fullText);
+                } else {
+                    // If no text streamed, remove empty message
+                    const msgDiv = document.getElementById(messageId);
+                    if (msgDiv) msgDiv.remove();
+                    this.addMessage('No response received.', 'bot', true);
+                }
                 
-                // Update conversation history
                 this.conversationHistory.push([message, fullText || 'No response']);
 
             } catch (error) {
-                console.warn('Streaming failed, falling back to non-streaming:', error);
+                console.warn('Streaming failed, falling back:', error);
                 this.showTyping(false);
+                // Remove streaming message if exists
+                if (this.currentStreamingMessage) {
+                    const msgDiv = document.getElementById(this.currentStreamingMessage);
+                    if (msgDiv) msgDiv.remove();
+                }
                 await this.sendMessageWithoutStreaming(message);
             }
         }
@@ -272,9 +276,7 @@
         async sendMessageWithoutStreaming(message) {
             const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     question: message,
                     history: this.conversationHistory
@@ -284,12 +286,10 @@
             if (!response.ok) throw new Error('API request failed');
 
             const data = await response.json();
-            
             this.showTyping(false);
             
             const botMessage = data.text || data.answer || data.response || 'Sorry, I could not process your request.';
             this.addMessage(botMessage, 'bot');
-
             this.conversationHistory.push([message, botMessage]);
         }
 
@@ -311,7 +311,6 @@
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             this.currentStreamingMessage = messageId;
-            
             return messageId;
         }
 
@@ -320,21 +319,19 @@
             if (!messageDiv) return;
 
             const textElement = messageDiv.querySelector('.bf-message-text');
-            textElement.innerHTML = this.escapeHtml(text) + '<span class="bf-cursor">|</span>';
+            textElement.innerHTML = this.formatMessage(text) + '<span class="bf-cursor">|</span>';
             
             const messagesContainer = document.getElementById('bf-messages');
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        finalizeStreamingMessage(messageId) {
+        finalizeStreamingMessage(messageId, text) {
             const messageDiv = document.getElementById(messageId);
             if (!messageDiv) return;
 
-            // Remove cursor and streaming class
             messageDiv.classList.remove('bf-streaming');
             const textElement = messageDiv.querySelector('.bf-message-text');
-            const currentText = textElement.textContent.replace('|', '');
-            textElement.innerHTML = this.escapeHtml(currentText);
+            textElement.innerHTML = this.formatMessage(text);
             this.currentStreamingMessage = null;
         }
 
@@ -343,16 +340,76 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `bf-message bf-${sender}-message ${isError ? 'bf-error' : ''}`;
             
+            const formattedText = sender === 'bot' ? this.formatMessage(text) : this.escapeHtml(text);
+            
             messageDiv.innerHTML = `
                 ${sender === 'bot' ? `<div class="bf-message-avatar">${this.config.avatar}</div>` : ''}
                 <div class="bf-message-content">
-                    <div class="bf-message-text">${this.escapeHtml(text)}</div>
+                    <div class="bf-message-text">${formattedText}</div>
                     ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
                 </div>
             `;
 
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        formatMessage(text) {
+            if (!this.config.enableMarkdown) {
+                return this.escapeHtml(text).replace(/\n/g, '<br>');
+            }
+
+            let html = this.escapeHtml(text);
+
+            // Code blocks (```code```)
+            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            
+            // Inline code (`code`)
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Bold (**text** or __text__)
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            
+            // Italic (*text* or _text_)
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+            
+            // Links [text](url)
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            
+            // Numbered lists
+            html = html.replace(/^(\d+\. .+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>\d+\. .+<\/li>\n?)+/g, '<ol>$&</ol>');
+            html = html.replace(/<li>(\d+)\. (.+?)<\/li>/g, '<li>$2</li>');
+            
+            // Bullet lists (- or *)
+            html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => {
+                if (!match.includes('<ol>')) {
+                    return '<ul>' + match + '</ul>';
+                }
+                return match;
+            });
+            
+            // Headers (# text)
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            
+            // Line breaks
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = html.replace(/\n/g, '<br>');
+            html = '<p>' + html + '</p>';
+            
+            // Clean up empty paragraphs
+            html = html.replace(/<p><\/p>/g, '');
+            html = html.replace(/<p>(<[uo]l>)/g, '$1');
+            html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<pre>)/g, '$1');
+            html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+            
+            return html;
         }
 
         showTyping(show) {
@@ -377,7 +434,6 @@
         }
     }
 
-    // Global API
     window.BeautifulFlowiseChat = {
         init: function(config) {
             if (!config.chatflowid || !config.apiHost) {
