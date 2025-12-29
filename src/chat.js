@@ -1,6 +1,6 @@
 /**
- * Beautiful Flowise Chat Widget
- * A modern, customizable alternative to default Flowise embed
+ * Beautiful Flowise Chat Widget v1.1.0
+ * A modern, customizable alternative to Flowise embed
  */
 
 (function() {
@@ -19,6 +19,7 @@
         placeholder: 'Type your message...',
         sendButtonText: '➤',
         showTimestamp: true,
+        enableStreaming: true,
         enableSoundNotification: false,
         avatar: '🤖'
     };
@@ -31,6 +32,7 @@
             this.conversationHistory = [];
             this.isOpen = false;
             this.isTyping = false;
+            this.currentStreamingMessage = null;
             
             this.init();
         }
@@ -115,7 +117,7 @@
                         </button>
                     </div>
 
-                    <!-- Powered By (optional) -->
+                    <!-- Powered By -->
                     <div class="bf-footer">
                         <a href="https://github.com/unknownfriend00007/beautiful-flowise-chat" target="_blank" class="bf-branding">
                             Powered by Beautiful Flowise Chat
@@ -180,9 +182,28 @@
             input.value = '';
             input.style.height = 'auto';
 
-            // Show typing indicator
-            this.showTyping(true);
+            // Show typing indicator if not streaming
+            if (!this.config.enableStreaming) {
+                this.showTyping(true);
+            }
 
+            try {
+                if (this.config.enableStreaming) {
+                    await this.sendMessageWithStreaming(message);
+                } else {
+                    await this.sendMessageWithoutStreaming(message);
+                }
+            } catch (error) {
+                console.error('Flowise API Error:', error);
+                this.showTyping(false);
+                this.addMessage('Sorry, something went wrong. Please try again.', 'bot', true);
+            }
+        }
+
+        async sendMessageWithStreaming(message) {
+            // Create empty message for streaming
+            const messageId = this.createStreamingMessage();
+            
             try {
                 const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                     method: 'POST',
@@ -191,28 +212,112 @@
                     },
                     body: JSON.stringify({
                         question: message,
+                        streaming: true,
                         history: this.conversationHistory
                     })
                 });
 
                 if (!response.ok) throw new Error('API request failed');
 
-                const data = await response.json();
-                
-                // Hide typing indicator
-                this.showTyping(false);
-                
-                // Add bot response
-                const botMessage = data.text || data.answer || data.response || 'Sorry, I could not process your request.';
-                this.addMessage(botMessage, 'bot');
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.substring(6));
+                                if (data.event === 'token' && data.data) {
+                                    fullText += data.data;
+                                    this.updateStreamingMessage(messageId, fullText);
+                                }
+                            } catch (e) {
+                                // Skip invalid JSON
+                            }
+                        }
+                    }
+                }
 
                 // Update conversation history
-                this.conversationHistory.push([message, botMessage]);
+                this.conversationHistory.push([message, fullText]);
+                this.currentStreamingMessage = null;
 
             } catch (error) {
-                console.error('Flowise API Error:', error);
-                this.showTyping(false);
-                this.addMessage('Sorry, something went wrong. Please try again.', 'bot', true);
+                // Fallback to non-streaming if streaming fails
+                console.warn('Streaming failed, falling back to non-streaming:', error);
+                this.removeStreamingMessage(messageId);
+                await this.sendMessageWithoutStreaming(message);
+            }
+        }
+
+        async sendMessageWithoutStreaming(message) {
+            const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question: message,
+                    history: this.conversationHistory
+                })
+            });
+
+            if (!response.ok) throw new Error('API request failed');
+
+            const data = await response.json();
+            
+            this.showTyping(false);
+            
+            const botMessage = data.text || data.answer || data.response || 'Sorry, I could not process your request.';
+            this.addMessage(botMessage, 'bot');
+
+            this.conversationHistory.push([message, botMessage]);
+        }
+
+        createStreamingMessage() {
+            const messagesContainer = document.getElementById('bf-messages');
+            const messageId = 'streaming-' + Date.now();
+            const messageDiv = document.createElement('div');
+            messageDiv.id = messageId;
+            messageDiv.className = 'bf-message bf-bot-message bf-streaming';
+            
+            messageDiv.innerHTML = `
+                <div class="bf-message-avatar">${this.config.avatar}</div>
+                <div class="bf-message-content">
+                    <div class="bf-message-text"><span class="bf-cursor">|</span></div>
+                    ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            this.currentStreamingMessage = messageId;
+            
+            return messageId;
+        }
+
+        updateStreamingMessage(messageId, text) {
+            const messageDiv = document.getElementById(messageId);
+            if (!messageDiv) return;
+
+            const textElement = messageDiv.querySelector('.bf-message-text');
+            textElement.innerHTML = this.escapeHtml(text) + '<span class="bf-cursor">|</span>';
+            
+            const messagesContainer = document.getElementById('bf-messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        removeStreamingMessage(messageId) {
+            const messageDiv = document.getElementById(messageId);
+            if (messageDiv) {
+                messageDiv.remove();
             }
         }
 
@@ -265,7 +370,6 @@
             return new BeautifulFlowiseChat(config);
         },
         initFull: function(config) {
-            // Full-page mode
             config.position = 'fullscreen';
             return this.init(config);
         }

@@ -1,13 +1,23 @@
-# 🎨 Beautiful Flowise Chat
+# 🎨 Beautiful Flowise Chat v1.1.0
 
 > A modern, customizable chat widget for Flowise AI instances - Drop-in replacement with beautiful UI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CDN](https://img.shields.io/badge/CDN-jsDelivr-orange.svg)](https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@main/dist/chat.js)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/unknownfriend00007/beautiful-flowise-chat)
+
+## 🆕 What's New in v1.1.0
+
+- ✅ **Fixed**: User message visibility bug (white text on white background)
+- ✨ **New**: Real-time streaming support for instant responses
+- 🎨 **New**: 5 professional themes (Cloudflare, Intercom, Gradient, Minimal, Dark)
+- 🚀 **Improved**: Better visual hierarchy and modern design patterns
+- ⚡ **Enhanced**: Smoother animations and responsive behavior
 
 ## ✨ Features
 
-- 🎨 **Modern Design** - Glassmorphism UI with smooth animations
+- 🎨 **Modern Design** - Professional UI with smooth animations
+- 🌊 **Real-time Streaming** - See responses as they're generated
 - 🎯 **Fully Customizable** - Colors, themes, positioning, and more
 - 💬 **Rich Features** - Typing indicators, timestamps, auto-resize
 - 🔌 **Easy Integration** - Works with ANY Flowise instance
@@ -19,22 +29,15 @@
 
 ### CDN Usage (Recommended)
 
-Add this to your HTML:
-
 ```html
 <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@main/dist/chat.js"></script>
 <script>
     BeautifulFlowiseChat.init({
         chatflowid: "your-chatflow-id",
-        apiHost: "https://your-flowise-instance.com"
+        apiHost: "https://your-flowise-instance.com",
+        enableStreaming: true  // Enable real-time streaming
     });
 </script>
-```
-
-### Pin to Specific Version
-
-```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@1.0.0/dist/chat.js"></script>
 ```
 
 ## ⚙️ Configuration Options
@@ -46,9 +49,10 @@ BeautifulFlowiseChat.init({
     apiHost: "https://ruvatron-flowhybrid-3.hf.space",
     
     // Optional
-    theme: "modern",              // "modern", "glassmorphism", "dark"
+    theme: "modern",              // "modern", "cloudflare", "intercom", "gradient", "glassmorphism", "dark", "minimal"
     primaryColor: "#6366f1",      // Any hex color
     position: "bottom-right",     // "bottom-right", "bottom-left"
+    enableStreaming: true,         // Enable real-time streaming responses
     title: "AI Assistant",
     subtitle: "Online",
     welcomeMessage: "Hi! How can I help you today?",
@@ -59,13 +63,32 @@ BeautifulFlowiseChat.init({
 });
 ```
 
-## 🎨 Themes
+## 🎨 Professional Themes
 
-### Modern (Default)
+### Cloudflare-Inspired
 ```javascript
 BeautifulFlowiseChat.init({
-    theme: "modern",
-    primaryColor: "#6366f1"
+    theme: "cloudflare",
+    chatflowid: "your-id",
+    apiHost: "your-host"
+});
+```
+
+### Intercom-Style
+```javascript
+BeautifulFlowiseChat.init({
+    theme: "intercom",
+    chatflowid: "your-id",
+    apiHost: "your-host"
+});
+```
+
+### Gradient Modern
+```javascript
+BeautifulFlowiseChat.init({
+    theme: "gradient",
+    chatflowid: "your-id",
+    apiHost: "your-host"
 });
 ```
 
@@ -73,33 +96,50 @@ BeautifulFlowiseChat.init({
 ```javascript
 BeautifulFlowiseChat.init({
     theme: "glassmorphism",
-    primaryColor: "#8b5cf6"
+    primaryColor: "#8b5cf6",
+    chatflowid: "your-id",
+    apiHost: "your-host"
 });
 ```
 
-### Dark
+### Dark Mode
 ```javascript
 BeautifulFlowiseChat.init({
     theme: "dark",
-    primaryColor: "#10b981"
+    primaryColor: "#10b981",
+    chatflowid: "your-id",
+    apiHost: "your-host"
 });
 ```
 
-## 📦 Full Page Mode
-
-For a full-page chat experience:
-
-```html
-<flowise-fullchatbot></flowise-fullchatbot>
-<script>
-    BeautifulFlowiseChat.initFull({
-        chatflowid: "your-chatflow-id",
-        apiHost: "https://your-flowise-instance.com"
-    });
-</script>
+### Minimal
+```javascript
+BeautifulFlowiseChat.init({
+    theme: "minimal",
+    chatflowid: "your-id",
+    apiHost: "your-host"
+});
 ```
 
-## 🔧 API
+## 🌊 Streaming Support
+
+The widget now supports real-time streaming responses from Flowise:
+
+```javascript
+BeautifulFlowiseChat.init({
+    chatflowid: "your-id",
+    apiHost: "your-host",
+    enableStreaming: true  // Default: true
+});
+```
+
+When streaming is enabled:
+- Responses appear in real-time as tokens are generated
+- Animated cursor shows active streaming
+- Automatically falls back to non-streaming if unsupported
+- Better user experience with instant feedback
+
+## 📋 API Reference
 
 ### Methods
 
@@ -109,7 +149,7 @@ Initializes a popup chat widget with the provided configuration.
 #### `BeautifulFlowiseChat.initFull(config)`
 Initializes a full-page chat interface.
 
-### Configuration Object
+### Configuration Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -117,6 +157,7 @@ Initializes a full-page chat interface.
 | `apiHost` | `string` | **required** | Your Flowise instance URL |
 | `theme` | `string` | `"modern"` | UI theme |
 | `primaryColor` | `string` | `"#6366f1"` | Main color |
+| `enableStreaming` | `boolean` | `true` | Enable real-time streaming |
 | `position` | `string` | `"bottom-right"` | Widget position |
 | `title` | `string` | `"AI Assistant"` | Chat header title |
 | `subtitle` | `string` | `"Online"` | Chat header subtitle |
@@ -126,36 +167,25 @@ Initializes a full-page chat interface.
 | `showTimestamp` | `boolean` | `true` | Show message timestamps |
 | `avatar` | `string` | `"🤖"` | Bot avatar (emoji or text) |
 
+## 🔧 Bug Fixes
+
+### v1.1.0 Fixes
+
+1. **User Message Visibility**: Fixed white text on white background - now properly displays with gradient background and white text
+2. **Streaming Support**: Added proper Server-Sent Events (SSE) handling for Flowise streaming API
+3. **Theme Consistency**: Ensured all themes properly handle user message colors
+
 ## 🆚 Comparison with Default Flowise Embed
 
 | Feature | Beautiful Flowise Chat | Default Flowise |
 |---------|------------------------|------------------|
 | Modern UI | ✅ | ❌ |
-| Customizable themes | ✅ | ⚠️ Limited |
+| Streaming support | ✅ | ⚠️ Complex setup |
+| Professional themes | ✅ 6 themes | ❌ |
 | Smooth animations | ✅ | ❌ |
-| Typing indicators | ✅ | ❌ |
-| Glassmorphism support | ✅ | ❌ |
+| User message bug | ✅ Fixed | ❌ Present |
 | Mobile optimized | ✅ | ⚠️ Basic |
 | Zero branding | ✅ | ❌ |
-
-## 🛠️ Development
-
-### Clone the repo
-```bash
-git clone https://github.com/unknownfriend00007/beautiful-flowise-chat.git
-cd beautiful-flowise-chat
-```
-
-### Test locally
-```bash
-# Open index.html in your browser
-open index.html
-```
-
-### Build
-```bash
-npm run build
-```
 
 ## 📝 Examples
 
@@ -165,55 +195,43 @@ npm run build
 BeautifulFlowiseChat.init({
     chatflowid: "support-flow-id",
     apiHost: "https://support.flowise.com",
-    title: "Support",
-    primaryColor: "#10b981"
+    theme: "intercom",
+    title: "Support"
 });
 
-// Sales chat
+// Sales chat (different position)
 BeautifulFlowiseChat.init({
     chatflowid: "sales-flow-id",
     apiHost: "https://sales.flowise.com",
-    title: "Sales",
-    primaryColor: "#f59e0b",
-    position: "bottom-left"
-});
-```
-
-### Custom Styling
-```javascript
-BeautifulFlowiseChat.init({
-    chatflowid: "your-id",
-    apiHost: "your-host",
-    theme: "glassmorphism",
-    primaryColor: "#ec4899",
-    avatar: "💎",
-    title: "Diamond Assistant",
-    welcomeMessage: "Welcome to our premium service!"
+    theme: "cloudflare",
+    position: "bottom-left",
+    title: "Sales"
 });
 ```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to:
+Contributions welcome! Feel free to:
 - Report bugs
 - Suggest features
 - Submit pull requests
 
 ## 📄 License
 
-MIT License - feel free to use in personal and commercial projects.
+MIT License - free for personal and commercial use.
 
 ## 🔗 Links
 
 - [GitHub Repository](https://github.com/unknownfriend00007/beautiful-flowise-chat)
 - [Demo Page](https://unknownfriend00007.github.io/beautiful-flowise-chat/)
 - [Flowise Official](https://github.com/FlowiseAI/Flowise)
+- [Report Issues](https://github.com/unknownfriend00007/beautiful-flowise-chat/issues)
 
 ## 🙏 Credits
 
 Built with ❤️ by [@unknownfriend00007](https://github.com/unknownfriend00007)
 
-Inspired by the need for a more beautiful Flowise chat experience.
+Inspired by modern chat interfaces from Cloudflare, Intercom, and other professional services.
 
 ---
 
