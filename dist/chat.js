@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.3.1
+ * Beautiful Flowise Chat Widget v1.3.2
  * A modern, customizable alternative to Flowise embed
  */
 
@@ -147,20 +147,8 @@
 .bf-bot-message { align-self: flex-start; }
 .bf-user-message { align-self: flex-end; flex-direction: row-reverse; }
 
-.bf-message-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-}
-
 .bf-message-content {
-    max-width: 75%;
+    max-width: 80%;
     min-width: 80px;
 }
 
@@ -190,35 +178,52 @@
     padding: 0 4px;
 }
 
-.bf-bot-message .bf-message-text p { margin: 0 0 8px 0; }
+.bf-bot-message .bf-message-text p { margin: 0 0 10px 0; }
 .bf-bot-message .bf-message-text p:last-child { margin-bottom: 0; }
-.bf-bot-message .bf-message-text strong { font-weight: 600; }
+.bf-bot-message .bf-message-text strong { font-weight: 600; color: #111827; }
+.bf-bot-message .bf-message-text em { font-style: italic; }
 .bf-bot-message .bf-message-text code {
     background: #f3f4f6;
-    padding: 2px 6px;
+    padding: 3px 7px;
     border-radius: 4px;
-    font-family: monospace;
+    font-family: 'Courier New', monospace;
     font-size: 13px;
     color: #be123c;
 }
 .bf-bot-message .bf-message-text pre {
     background: #1f2937;
     color: #f9fafb;
-    padding: 12px;
+    padding: 14px;
     border-radius: 8px;
     overflow-x: auto;
-    margin: 8px 0;
+    margin: 10px 0;
+}
+.bf-bot-message .bf-message-text pre code {
+    background: transparent;
+    color: #f9fafb;
+    padding: 0;
 }
 .bf-bot-message .bf-message-text ul,
 .bf-bot-message .bf-message-text ol {
-    margin: 8px 0;
-    padding-left: 20px;
+    margin: 10px 0;
+    padding-left: 24px;
 }
-.bf-bot-message .bf-message-text li { margin: 4px 0; }
+.bf-bot-message .bf-message-text li { margin: 6px 0; line-height: 1.5; }
 .bf-bot-message .bf-message-text a {
     color: var(--bf-primary-color);
-    text-decoration: none;
+    text-decoration: underline;
 }
+.bf-bot-message .bf-message-text h1,
+.bf-bot-message .bf-message-text h2,
+.bf-bot-message .bf-message-text h3 {
+    font-weight: 600;
+    color: #111827;
+    margin: 14px 0 8px 0;
+    line-height: 1.3;
+}
+.bf-bot-message .bf-message-text h1 { font-size: 18px; }
+.bf-bot-message .bf-message-text h2 { font-size: 16px; }
+.bf-bot-message .bf-message-text h3 { font-size: 15px; }
 
 .bf-streaming .bf-cursor {
     display: inline;
@@ -415,7 +420,6 @@
                     <div class="bf-messages" id="bf-messages">
                         ${this.config.welcomeMessage ? `
                         <div class="bf-message bf-bot-message">
-                            <div class="bf-message-avatar">${this.config.avatar}</div>
                             <div class="bf-message-content">
                                 <div class="bf-message-text">${this.escapeHtml(this.config.welcomeMessage)}</div>
                                 ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
@@ -521,13 +525,12 @@
                     return;
                 }
 
-                this.showTyping(false);
-                const messageId = this.createStreamingMessage();
-                
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let fullText = '';
                 let buffer = '';
+                let messageId = null;
+                let firstToken = true;
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -546,7 +549,17 @@
                                 const data = JSON.parse(dataStr);
                                 if (data.event === 'token' && data.data) {
                                     fullText += data.data;
-                                    this.updateStreamingMessage(messageId, fullText, true);
+                                    
+                                    // Create message bubble only when first token arrives
+                                    if (firstToken) {
+                                        this.showTyping(false);
+                                        messageId = this.createStreamingMessage();
+                                        firstToken = false;
+                                    }
+                                    
+                                    if (messageId) {
+                                        this.updateStreamingMessage(messageId, fullText, true);
+                                    }
                                 }
                             } catch (e) {
                                 this.log('Parse error:', e);
@@ -555,7 +568,7 @@
                     }
                 }
 
-                if (fullText) {
+                if (fullText && messageId) {
                     this.updateStreamingMessage(messageId, fullText, false);
                     this.conversationHistory.push([message, fullText]);
                 } else {
@@ -598,7 +611,6 @@
             messageDiv.className = 'bf-message bf-bot-message bf-streaming';
             
             messageDiv.innerHTML = `
-                <div class="bf-message-avatar">${this.config.avatar}</div>
                 <div class="bf-message-content">
                     <div class="bf-message-text"></div>
                     ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
@@ -637,7 +649,6 @@
             const formattedText = sender === 'bot' ? this.formatMarkdown(text) : this.escapeHtml(text);
             
             messageDiv.innerHTML = `
-                ${sender === 'bot' ? `<div class="bf-message-avatar">${this.config.avatar}</div>` : ''}
                 <div class="bf-message-content">
                     <div class="bf-message-text">${formattedText}</div>
                     ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
@@ -651,28 +662,56 @@
             if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\n/g, '<br>');
             
             let html = this.escapeHtml(text);
+            
+            // Code blocks
             html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            
+            // Inline code
             html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Headers (remove ### but keep text)
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            
+            // Bold
             html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            
+            // Italic
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+            
+            // Links
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            
+            // Numbered lists
             html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
             html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => {
-                return match.includes('1.') ? '<ol>' + match + '</ol>' : match;
+                return '<ol>' + match + '</ol>';
             });
-            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+            
+            // Bullet lists
+            html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
             html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => {
                 if (!match.includes('<ol>')) return '<ul>' + match + '</ul>';
                 return match;
             });
+            
+            // Paragraphs and line breaks
             html = html.replace(/\n\n/g, '</p><p>');
             html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
+            
+            // Cleanup
             html = html.replace(/<p><\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
             html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
             html = html.replace(/<p>(<pre>)/g, '$1');
             html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+            html = html.replace(/<p>(<h[123]>)/g, '$1');
+            html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
+            
             return html;
         }
 
