@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.3.0
+ * Beautiful Flowise Chat Widget v1.3.1
  * A modern, customizable alternative to Flowise embed
  */
 
@@ -221,7 +221,7 @@
 }
 
 .bf-streaming .bf-cursor {
-    display: inline-block;
+    display: inline;
     animation: blink-cursor 1s step-end infinite;
     margin-left: 2px;
     font-weight: bold;
@@ -333,31 +333,15 @@
 }
 
 /* THEMES */
-.bf-theme-cloudflare {
-    --bf-primary-color: #f38020;
-    --bf-primary-dark: #d96b0f;
-}
-
-.bf-theme-intercom {
-    --bf-primary-color: #1f8ded;
-    --bf-primary-dark: #1273c5;
-}
-
-.bf-theme-gradient {
-    --bf-primary-color: #667eea;
-    --bf-primary-dark: #764ba2;
-}
-
+.bf-theme-cloudflare { --bf-primary-color: #f38020; --bf-primary-dark: #d96b0f; }
+.bf-theme-intercom { --bf-primary-color: #1f8ded; --bf-primary-dark: #1273c5; }
+.bf-theme-gradient { --bf-primary-color: #667eea; --bf-primary-dark: #764ba2; }
 .bf-theme-glassmorphism .bf-chat-window {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
-
-.bf-theme-dark {
-    --bf-primary-color: #6366f1;
-    --bf-primary-dark: #4f46e5;
-}
+.bf-theme-dark { --bf-primary-color: #6366f1; --bf-primary-dark: #4f46e5; }
 .bf-theme-dark .bf-chat-window { background: #1f2937; }
 .bf-theme-dark .bf-messages { background: #111827; }
 .bf-theme-dark .bf-message-text { background: #374151; color: #f9fafb; }
@@ -369,11 +353,7 @@
 .bf-theme-dark .bf-input-container { background: #1f2937; border-top-color: #374151; }
 .bf-theme-dark .bf-footer { background: #1f2937; border-top-color: #374151; }
 .bf-theme-dark .bf-branding { color: #9ca3af; }
-
-.bf-theme-minimal {
-    --bf-primary-color: #000000;
-    --bf-primary-dark: #1f2937;
-}
+.bf-theme-minimal { --bf-primary-color: #000000; --bf-primary-dark: #1f2937; }
     `;
 
     class BeautifulFlowiseChat {
@@ -513,7 +493,8 @@
                 this.log('Error:', error);
                 this.showTyping(false);
                 if (this.currentStreamingMessage) {
-                    document.getElementById(this.currentStreamingMessage)?.remove();
+                    const elem = document.getElementById(this.currentStreamingMessage);
+                    if (elem) elem.remove();
                     this.currentStreamingMessage = null;
                 }
                 this.addMessage('Sorry, something went wrong.', 'bot');
@@ -532,7 +513,6 @@
                 
                 const contentType = response.headers.get('content-type');
                 if (!contentType?.includes('text/event-stream')) {
-                    // Fallback to non-streaming
                     const data = await response.json();
                     this.showTyping(false);
                     const botMessage = data.text || data.answer || data.response || 'No response';
@@ -566,7 +546,7 @@
                                 const data = JSON.parse(dataStr);
                                 if (data.event === 'token' && data.data) {
                                     fullText += data.data;
-                                    this.updateStreamingMessage(messageId, fullText);
+                                    this.updateStreamingMessage(messageId, fullText, true);
                                 }
                             } catch (e) {
                                 this.log('Parse error:', e);
@@ -576,18 +556,20 @@
                 }
 
                 if (fullText) {
-                    this.finalizeStreamingMessage(messageId, fullText);
+                    this.updateStreamingMessage(messageId, fullText, false);
                     this.conversationHistory.push([message, fullText]);
                 } else {
                     throw new Error('No text streamed');
                 }
 
             } catch (error) {
-                this.log('Streaming failed, falling back:', error);
+                this.log('Streaming failed, using fallback:', error);
                 if (this.currentStreamingMessage) {
-                    document.getElementById(this.currentStreamingMessage)?.remove();
+                    const elem = document.getElementById(this.currentStreamingMessage);
+                    if (elem) elem.remove();
                     this.currentStreamingMessage = null;
                 }
+                this.showTyping(true);
                 await this.sendWithoutStreaming(message);
             }
         }
@@ -618,36 +600,33 @@
             messageDiv.innerHTML = `
                 <div class="bf-message-avatar">${this.config.avatar}</div>
                 <div class="bf-message-content">
-                    <div class="bf-message-text"><span class="bf-cursor">|</span></div>
+                    <div class="bf-message-text"></div>
                     ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
                 </div>
             `;
 
             messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            this.scrollToBottom();
             this.currentStreamingMessage = messageId;
             return messageId;
         }
 
-        updateStreamingMessage(messageId, text) {
+        updateStreamingMessage(messageId, text, showCursor) {
             const messageDiv = document.getElementById(messageId);
             if (!messageDiv) return;
 
             const textElement = messageDiv.querySelector('.bf-message-text');
-            textElement.innerHTML = this.formatMarkdown(text) + '<span class="bf-cursor">|</span>';
+            const formattedText = this.escapeHtml(text).replace(/\n/g, '<br>');
             
-            const messagesContainer = document.getElementById('bf-messages');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        finalizeStreamingMessage(messageId, text) {
-            const messageDiv = document.getElementById(messageId);
-            if (!messageDiv) return;
-
-            messageDiv.classList.remove('bf-streaming');
-            const textElement = messageDiv.querySelector('.bf-message-text');
-            textElement.innerHTML = this.formatMarkdown(text);
-            this.currentStreamingMessage = null;
+            if (showCursor) {
+                textElement.innerHTML = formattedText + '<span class="bf-cursor">|</span>';
+            } else {
+                textElement.innerHTML = this.formatMarkdown(text);
+                messageDiv.classList.remove('bf-streaming');
+                this.currentStreamingMessage = null;
+            }
+            
+            this.scrollToBottom();
         }
 
         addMessage(text, sender) {
@@ -665,7 +644,7 @@
                 </div>
             `;
             messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            this.scrollToBottom();
         }
 
         formatMarkdown(text) {
@@ -699,6 +678,12 @@
 
         showTyping(show) {
             document.getElementById('bf-typing').style.display = show ? 'flex' : 'none';
+            if (show) this.scrollToBottom();
+        }
+
+        scrollToBottom() {
+            const container = document.getElementById('bf-messages');
+            container.scrollTop = container.scrollHeight;
         }
 
         getTimeString() {
