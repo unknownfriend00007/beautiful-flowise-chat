@@ -74,6 +74,16 @@
         .info-box li {
             margin: 5px 0;
         }
+        .code-box {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
@@ -102,13 +112,28 @@
             <button class="theme-btn" onclick="changeTheme('dark')">Dark</button>
             <button class="theme-btn" onclick="changeTheme('minimal')">Minimal</button>
         </div>
+
+        <h2 style="margin-top: 40px;">🚀 Quick Start Code:</h2>
+        <div class="code-box">
+&lt;script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@d6046f3/dist/chat.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+BeautifulFlowiseChat.init({
+    chatflowid: "your-chatflow-id",
+    apiHost: "https://your-flowise-instance.com",
+    theme: "modern",  // Try: gradient, dark, cloudflare...
+    enableStreaming: true,
+    enableMarkdown: true
+});
+&lt;/script&gt;
+        </div>
         
         <p style="margin-top: 30px; color: #6b7280; text-align: center;">
             👉 Look in the bottom-right corner to test the chat widget!
         </p>
     </div>
     
-    <script src="./dist/chat.js"></script>
+    <!-- Load from CDN with specific commit hash to bypass cache -->
+    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@d6046f3/dist/chat.js"></script>
     <script>
         let currentChat = null;
         
