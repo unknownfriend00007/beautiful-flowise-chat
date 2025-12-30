@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.6.5
+ * Beautiful Flowise Chat Widget v1.6.6
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -198,14 +198,13 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* CRITICAL: MESSAGE ALIGNMENT - NO GAP */
+/* CRITICAL: MESSAGE ALIGNMENT - EXTEND LEFTWARD */
 .bf-message.bf-bot-message { 
     justify-content: flex-start;
 }
 
 .bf-message.bf-user-message { 
     justify-content: flex-end;
-    margin-left: auto;
 }
 
 .bf-message-content {
@@ -229,20 +228,22 @@
     color: #1f2937;
     font-size: 14px;
     line-height: 1.6;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: keep-all;
     hyphens: none;
     white-space: pre-wrap;
     display: inline-block;
+    width: fit-content;
+    text-align: left;
 }
 
-/* DEFAULT THEME - User message with DARK TEXT, NO GLOW */
+/* DEFAULT THEME - User message */
 .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.15);
     color: #1f2937;
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .bf-message-time {
@@ -416,7 +417,7 @@
 .bf-theme-cloudflare .bf-user-message .bf-message-text {
     background: rgba(243, 128, 32, 0.15);
     color: #1f2937;
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 /* INTERCOM THEME */
@@ -427,10 +428,10 @@
 .bf-theme-intercom .bf-user-message .bf-message-text {
     background: rgba(31, 141, 237, 0.15);
     color: #1f2937;
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* GRADIENT THEME */
+/* GRADIENT THEME - NO GLOW */
 .bf-theme-gradient { 
     --bf-primary-color: #667eea; 
     --bf-primary-dark: #764ba2; 
@@ -438,7 +439,7 @@
 .bf-theme-gradient .bf-user-message .bf-message-text {
     background: rgba(102, 126, 234, 0.2);
     color: #ffffff;
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 /* GLASSMORPHISM THEME */
@@ -450,10 +451,10 @@
 .bf-theme-glassmorphism .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.25);
     color: #ffffff;
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* DARK THEME - WHITE TEXT, NO GLOW */
+/* DARK THEME */
 .bf-theme-dark { 
     --bf-primary-color: #6366f1; 
     --bf-primary-dark: #4f46e5; 
@@ -462,12 +463,13 @@
 .bf-theme-dark .bf-messages { background: #111827; }
 .bf-theme-dark .bf-message-text { 
     background: #374151; 
-    color: #f9fafb; 
+    color: #f9fafb;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 .bf-theme-dark .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.4);
     color: #ffffff;
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 .bf-theme-dark .bf-input { 
     background: #374151; 
@@ -496,7 +498,7 @@
 .bf-theme-minimal .bf-user-message .bf-message-text {
     background: rgba(0, 0, 0, 0.08);
     color: #1f2937;
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
     `;
 
