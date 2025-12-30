@@ -1,6 +1,12 @@
 /**
- * Beautiful Flowise Chat Widget v2.0.1
- * Production-Hardened Build
+ * Beautiful Flowise Chat Widget v2.0.2
+ * Production-Hardened Build + Performance Hotfix
+ * 
+ * v2.0.2 Hotfix:
+ * - Fixed bold placeholder conflict with italic regex
+ * - Reduced streaming lag from 50ms to 16ms (60fps)
+ * - Added immediate first token display
+ * - Optimized scroll performance with RAF
  * 
  * Security & Performance Updates:
  * - XSS protection for markdown links
@@ -34,26 +40,28 @@
         enableStreaming: true,
         enableMarkdown: true,
         clearChatOnReload: false,
-        confirmOnReset: true, // Show confirmation before reset
-        maxMessages: 100, // Cap stored message history
-        requestTimeout: 30000, // 30 second timeout
+        confirmOnReset: true,
+        maxMessages: 100,
+        requestTimeout: 30000,
         debug: false,
         avatar: '\ud83e\udd16',
         mode: 'popup',
-        // Custom theme options
         customUserMessageBg: null,
         customUserMessageText: null,
         customChatBg: null
     };
 
-    // Constants
+    // Constants - optimized for 60fps
     const CONSTANTS = {
         FOCUS_DELAY: 100,
-        SCROLL_THROTTLE: 50,
-        STREAM_BATCH_DELAY: 50,
+        SCROLL_THROTTLE: 16, // ~60fps
+        STREAM_BATCH_DELAY: 16, // ~60fps for smooth rendering
         MAX_INPUT_HEIGHT: 120,
-        MIN_REQUEST_INTERVAL: 500, // Client-side rate limiting
-        ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:']
+        MIN_REQUEST_INTERVAL: 500,
+        ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:'],
+        // Use unique placeholders that won't conflict with any markdown syntax
+        BOLD_PLACEHOLDER_START: '{{BFBOLDSTART}}',
+        BOLD_PLACEHOLDER_END: '{{BFBOLDEND}}'
     };
 
     const styles = `
@@ -594,7 +602,6 @@
             this.chatflowid = config.chatflowid;
             this.apiHost = config.apiHost;
             
-            // Storage key - using official Flowise pattern
             this.storageKey = `${this.chatflowid}_INTERNAL`;
             
             this.isOpen = this.config.mode === 'fullscreen';
@@ -602,26 +609,27 @@
             this.messages = [];
             this.chatId = null;
             
-            // Performance optimization - throttle scroll updates
+            // Performance optimization
             this.lastScrollTime = 0;
+            this.scrollPending = false;
             
-            // Streaming batch optimization
+            // Streaming optimization
             this.streamBuffer = '';
             this.streamUpdateTimer = null;
+            this.firstTokenReceived = false;
             
             // Request management
             this.abortController = null;
             this.isSending = false;
             this.lastRequestTime = 0;
             
-            // Event listener references for cleanup
+            // Event listener references
             this.eventListeners = [];
             
             this.init();
         }
 
         init() {
-            // Prevent duplicate widgets
             const existing = document.getElementById('beautiful-flowise-container');
             if (existing) {
                 this.log('Removing existing widget instance');
@@ -643,49 +651,36 @@
             const container = document.getElementById('beautiful-flowise-container');
             if (!container) return;
             
-            // Set primary color
             container.style.setProperty('--bf-primary-color', this.config.primaryColor);
             
-            // Compute and set primary dark color
             const primaryDark = this.config.primaryDarkColor || this.darkenColor(this.config.primaryColor);
             container.style.setProperty('--bf-primary-dark', primaryDark);
             
-            // Custom theme specific settings
             if (this.config.theme === 'custom') {
-                // User message background
                 if (this.config.customUserMessageBg) {
                     container.style.setProperty('--bf-custom-user-msg-bg', this.config.customUserMessageBg);
                 } else {
-                    // Auto-generate light version of primary color
                     const rgba = this.colorToRgba(this.config.primaryColor, 0.15);
                     container.style.setProperty('--bf-custom-user-msg-bg', rgba);
                 }
                 
-                // User message text color
                 if (this.config.customUserMessageText) {
                     container.style.setProperty('--bf-custom-user-msg-text', this.config.customUserMessageText);
                 }
                 
-                // Chat background color
                 if (this.config.customChatBg) {
                     container.style.setProperty('--bf-custom-chat-bg', this.config.customChatBg);
                 }
             }
         }
 
-        /**
-         * Darken a color by 10% for gradient effect
-         * Supports hex, rgb, and rgba formats
-         */
         darkenColor(color) {
             if (!color) return '#4f46e5';
             
-            // Try to parse as hex
             if (color.startsWith('#')) {
                 return this.darkenHex(color);
             }
             
-            // Try to parse as rgb/rgba
             const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
             if (rgbMatch) {
                 const [, r, g, b, a] = rgbMatch;
@@ -695,7 +690,6 @@
                 return a !== undefined ? `rgba(${darkR}, ${darkG}, ${darkB}, ${a})` : `rgb(${darkR}, ${darkG}, ${darkB})`;
             }
             
-            // Fallback to default
             return '#4f46e5';
         }
 
@@ -710,21 +704,15 @@
             return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
         }
 
-        /**
-         * Convert any color format to rgba
-         * Safely handles hex, rgb, and rgba inputs
-         */
         colorToRgba(color, alpha) {
             if (!color) return `rgba(99, 102, 241, ${alpha})`;
             
-            // If already rgba/rgb, parse and apply alpha
             const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
             if (rgbMatch) {
                 const [, r, g, b] = rgbMatch;
                 return `rgba(${r}, ${g}, ${b}, ${alpha})`;
             }
             
-            // If hex, convert to rgba
             if (color.startsWith('#')) {
                 const hex = color.replace('#', '');
                 if (hex.length === 6) {
@@ -738,7 +726,6 @@
                 }
             }
             
-            // Fallback to default
             return `rgba(99, 102, 241, ${alpha})`;
         }
 
@@ -759,14 +746,11 @@
                 if (stored) {
                     const data = JSON.parse(stored);
                     
-                    // Validate data structure
                     if (typeof data !== 'object' || data === null) {
                         throw new Error('Invalid data structure');
                     }
                     
-                    // Validate and load chatId
                     if (data.chatId) {
-                        // Validate UUID format
                         if (/^[a-f0-9-]{36}$/i.test(data.chatId)) {
                             this.chatId = data.chatId;
                             this.log('Loaded chatId from storage:', this.chatId);
@@ -776,9 +760,7 @@
                         }
                     }
                     
-                    // Validate and load messages
                     if (data.messages && Array.isArray(data.messages)) {
-                        // Cap message history to prevent localStorage overflow
                         if (data.messages.length > this.config.maxMessages) {
                             this.log(`Trimming message history from ${data.messages.length} to ${this.config.maxMessages}`);
                             data.messages = data.messages.slice(-this.config.maxMessages);
@@ -816,7 +798,6 @@
             if (this.config.clearChatOnReload) return;
             
             try {
-                // Trim messages if exceeding max
                 let messagesToSave = this.messages;
                 if (messagesToSave.length > this.config.maxMessages) {
                     messagesToSave = messagesToSave.slice(-this.config.maxMessages);
@@ -852,32 +833,26 @@
                 : true;
             
             if (shouldReset) {
-                // Abort any in-flight requests
                 if (this.abortController) {
                     this.abortController.abort();
                     this.abortController = null;
                 }
                 
-                // Clear storage
                 localStorage.removeItem(this.storageKey);
                 
-                // Reset state
                 this.chatId = null;
                 this.messages = [];
                 this.isSending = false;
                 this.currentStreamingMessageId = null;
                 
-                // Clear UI
                 const messagesContainer = document.getElementById('bf-messages');
                 messagesContainer.innerHTML = '';
                 
-                // Re-enable input
                 const input = document.getElementById('bf-input');
                 const sendBtn = document.getElementById('bf-send');
                 if (input) input.disabled = false;
                 if (sendBtn) sendBtn.disabled = false;
                 
-                // Show welcome message
                 this.initializeWithWelcome();
                 
                 this.log('Chat reset. ChatId cleared - will be assigned by Flowise on next message');
@@ -1005,7 +980,6 @@
                 openIcon.style.display = 'block';
                 closeIcon.style.display = 'none';
                 
-                // Abort any in-flight requests when closing
                 if (this.abortController) {
                     this.abortController.abort();
                     this.abortController = null;
@@ -1018,14 +992,12 @@
             const sendBtn = document.getElementById('bf-send');
             const message = input.value.trim();
             
-            // Validation checks
             if (!message) return;
             if (this.isSending) {
                 this.log('Already sending a message');
                 return;
             }
             
-            // Client-side rate limiting
             const now = Date.now();
             if (now - this.lastRequestTime < CONSTANTS.MIN_REQUEST_INTERVAL) {
                 this.log('Rate limited - too many requests');
@@ -1033,12 +1005,10 @@
             }
             this.lastRequestTime = now;
             
-            // Lock input
             this.isSending = true;
             input.disabled = true;
             sendBtn.disabled = true;
 
-            // Add user message
             this.addMessage(message, 'user');
             
             input.value = '';
@@ -1046,8 +1016,8 @@
 
             const botMessageId = this.createPlaceholderMessage();
             this.currentStreamingMessageId = botMessageId;
+            this.firstTokenReceived = false;
             
-            // Create AbortController for this request
             this.abortController = new AbortController();
 
             try {
@@ -1139,7 +1109,6 @@
                 const decoder = new TextDecoder();
                 let buffer = '';
                 
-                // Reset stream buffer
                 this.streamBuffer = '';
                 
                 while (true) {
@@ -1190,11 +1159,16 @@
                             this.log('✅ ChatId assigned by Flowise (metadata):', this.chatId);
                         }
 
-                        // Batch token updates
                         if (token) {
                             this.streamBuffer += token;
                             
-                            // Throttle DOM updates
+                            // Instant first token display for responsiveness
+                            if (!this.firstTokenReceived) {
+                                this.firstTokenReceived = true;
+                                this.updatePlaceholderMessage(botMessageId, this.streamBuffer, true);
+                            }
+                            
+                            // Batch subsequent updates at 60fps
                             if (!this.streamUpdateTimer) {
                                 this.streamUpdateTimer = setTimeout(() => {
                                     this.updatePlaceholderMessage(botMessageId, this.streamBuffer, true);
@@ -1317,7 +1291,6 @@
             const textElement = messageDiv.querySelector('.bf-message-text');
             
             if (isStreaming) {
-                // During streaming, show raw text without markdown parsing
                 textElement.textContent = text;
                 const cursor = document.createElement('span');
                 cursor.className = 'bf-cursor';
@@ -1325,16 +1298,17 @@
                 textElement.appendChild(cursor);
                 messageDiv.classList.add('bf-streaming');
             } else {
-                // Parse markdown only when complete
                 textElement.innerHTML = this.formatMarkdown(text);
                 messageDiv.classList.remove('bf-streaming');
             }
             
-            // Throttled scroll to reduce reflow
-            const now = Date.now();
-            if (now - this.lastScrollTime > CONSTANTS.SCROLL_THROTTLE) {
-                this.scrollToBottom();
-                this.lastScrollTime = now;
+            // RAF-based scroll for smoother performance
+            if (!this.scrollPending) {
+                this.scrollPending = true;
+                requestAnimationFrame(() => {
+                    this.scrollToBottom();
+                    this.scrollPending = false;
+                });
             }
         }
 
@@ -1354,29 +1328,27 @@
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
             
-            // Bold (process before italic to avoid conflicts)
-            html = html.replace(/\*\*(.+?)\*\*/g, '___BOLD_START___$1___BOLD_END___');
-            html = html.replace(/__(.+?)__/g, '___BOLD_START___$1___BOLD_END___');
+            // Bold - using unique placeholders that won't conflict
+            html = html.replace(/\*\*(.+?)\*\*/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
+            html = html.replace(/__(.+?)__/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
             
             // Italic
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
             
-            // Replace bold placeholders
-            html = html.replace(/___BOLD_START___/g, '<strong>');
-            html = html.replace(/___BOLD_END___/g, '</strong>');
+            // Replace bold placeholders with actual HTML
+            html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_START, 'g'), '<strong>');
+            html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_END, 'g'), '</strong>');
             
             // Links with XSS protection
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-                // Sanitize URL - only allow safe schemes
                 try {
                     const urlObj = new URL(url, window.location.href);
                     if (!CONSTANTS.ALLOWED_URL_SCHEMES.includes(urlObj.protocol)) {
-                        return match; // Return original if suspicious
+                        return match;
                     }
                     return `<a href="${this.escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
                 } catch {
-                    // Invalid URL, return as text
                     return match;
                 }
             });
@@ -1425,20 +1397,16 @@
         }
 
         destroy() {
-            // Abort any in-flight requests
             if (this.abortController) {
                 this.abortController.abort();
             }
             
-            // Clear timers
             if (this.streamUpdateTimer) {
                 clearTimeout(this.streamUpdateTimer);
             }
             
-            // Remove event listeners
             this.removeEventListeners();
             
-            // Remove DOM elements
             const container = document.getElementById('beautiful-flowise-container');
             if (container) {
                 container.remove();
@@ -1448,7 +1416,6 @@
         }
     }
 
-    // Validation helper
     function validateConfig(config) {
         if (!config || typeof config !== 'object') {
             console.error('BeautifulFlowiseChat: config must be an object');
