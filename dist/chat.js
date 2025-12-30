@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.4.8
+ * Beautiful Flowise Chat Widget v1.4.9
  * Buttery smooth streaming with loading animation
  * Created by RPS
  */
@@ -444,6 +444,7 @@
             this.config = { ...defaults, ...config };
             this.chatflowid = config.chatflowid;
             this.apiHost = config.apiHost;
+            this.sessionId = this.generateSessionId();
             this.conversationHistory = [];
             this.isOpen = false;
             this.currentStreamingMessageId = null;
@@ -454,6 +455,11 @@
             this.injectStyles();
             this.createWidget();
             this.attachEventListeners();
+            this.log('Session ID:', this.sessionId);
+        }
+
+        generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
         log(...args) {
@@ -587,7 +593,11 @@
                 const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: message, streaming: true })
+                    body: JSON.stringify({ 
+                        question: message, 
+                        streaming: true,
+                        sessionId: this.sessionId
+                    })
                 });
 
                 if (!response.ok) throw new Error('API failed');
@@ -677,7 +687,10 @@
             const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: message })
+                body: JSON.stringify({ 
+                    question: message,
+                    sessionId: this.sessionId
+                })
             });
 
             if (!response.ok) throw new Error('API failed');
