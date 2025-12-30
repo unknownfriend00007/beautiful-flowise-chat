@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.4.4
+ * Beautiful Flowise Chat Widget v1.4.5
  * Buttery smooth streaming with loading animation
  * Created by RPS
  */
@@ -164,6 +164,7 @@
     word-wrap: break-word;
     word-break: break-word;
     white-space: pre-wrap;
+    display: inline-block;
 }
 
 .bf-user-message .bf-message-text {
@@ -226,12 +227,11 @@
 .bf-bot-message .bf-message-text h2 { font-size: 16px; }
 .bf-bot-message .bf-message-text h3 { font-size: 15px; }
 
-/* Loading dots - compact and natural */
+/* Loading dots - compact */
 .bf-loading-dots {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 0;
 }
 
 .bf-loading-dots span {
