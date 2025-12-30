@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.9.8
+ * Beautiful Flowise Chat Widget v1.9.9
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -532,6 +532,47 @@
     color: #1f2937 !important;
     border: none !important;
     box-shadow: none !important;
+}
+
+/* CUSTOM THEME - Fully Customizable with Single Color */
+.bf-theme-custom .bf-header {
+    background: var(--bf-primary-color) !important;
+}
+
+.bf-theme-custom .bf-chat-button {
+    background: var(--bf-primary-color) !important;
+}
+
+.bf-theme-custom .bf-send-btn {
+    background: var(--bf-primary-color) !important;
+}
+
+.bf-theme-custom .bf-user-message .bf-message-text {
+    background: var(--bf-primary-color) !important;
+    opacity: 0.15 !important;
+    color: #1f2937 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.bf-theme-custom .bf-loading-dots span {
+    background: var(--bf-primary-color) !important;
+}
+
+.bf-theme-custom .bf-streaming .bf-cursor {
+    color: var(--bf-primary-color) !important;
+}
+
+.bf-theme-custom .bf-input:focus {
+    border-color: var(--bf-primary-color) !important;
+}
+
+.bf-theme-custom .bf-branding:hover {
+    color: var(--bf-primary-color) !important;
+}
+
+.bf-theme-custom .bf-bot-message .bf-message-text a {
+    color: var(--bf-primary-color) !important;
 }
     `;
 
