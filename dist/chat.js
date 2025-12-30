@@ -1,6 +1,11 @@
 /**
- * Beautiful Flowise Chat Widget v2.0.3
- * Production-Hardened Build - Critical Markdown Fixes
+ * Beautiful Flowise Chat Widget v2.0.4
+ * Production-Hardened Build - List Type Detection Fix
+ * 
+ * v2.0.4 Critical Fix:
+ * - Fixed numbered lists rendering as bullets
+ * - Added proper list type detection (<ol> vs <ul>)
+ * - Improved markdown list processing accuracy
  * 
  * v2.0.3 Critical Fixes:
  * - Fixed code blocks being mangled by markdown processors
@@ -1388,16 +1393,17 @@
                 }
             });
             
-            // Lists - numbered and bullet
-            html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
-            html = html.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
+            // Lists - numbered and bullet (mark types with data attributes for detection)
+            html = html.replace(/^\d+\.\s+(.+)$/gm, '<li data-list="ol">$1</li>');
+            html = html.replace(/^[\-\*]\s+(.+)$/gm, '<li data-list="ul">$1</li>');
             
             // Wrap consecutive <li> in appropriate list tags
-            html = html.replace(/(<li>.+?<\/li>(?:\n<li>.+?<\/li>)*)/g, (match) => {
-                // Check if this is part of a numbered list by looking at original context
-                // Since we've already converted, we'll assume bullet list by default
-                // This is safe because numbered lists would have been matched first
-                return '<ul>' + match + '</ul>';
+            html = html.replace(/(<li[^>]*>.+?<\/li>(?:\n<li[^>]*>.+?<\/li>)*)/g, (match) => {
+                // Detect list type from the first item's data attribute
+                const listType = match.includes('data-list="ol"') ? 'ol' : 'ul';
+                // Remove data attributes from the final HTML
+                const cleaned = match.replace(/ data-list="[^"]+"/g, '');
+                return `<${listType}>${cleaned}</${listType}>`;
             });
             
             // Paragraphs
