@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.9.4
+ * Beautiful Flowise Chat Widget v1.9.5
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -273,9 +273,9 @@
 }
 
 .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.12) !important;
-    color: var(--bf-primary-dark) !important;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2) !important;
+    background: rgba(99, 102, 241, 0.08) !important;
+    color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15) !important;
 }
 
 .bf-message-time {
@@ -445,9 +445,9 @@
     --bf-primary-dark: #d96b0f; 
 }
 .bf-theme-cloudflare .bf-user-message .bf-message-text {
-    background: rgba(243, 128, 32, 0.12) !important;
-    color: #d96b0f !important;
-    box-shadow: 0 2px 8px rgba(243, 128, 32, 0.2) !important;
+    background: rgba(243, 128, 32, 0.08) !important;
+    color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(243, 128, 32, 0.15) !important;
 }
 
 .bf-theme-intercom { 
@@ -455,9 +455,9 @@
     --bf-primary-dark: #1273c5; 
 }
 .bf-theme-intercom .bf-user-message .bf-message-text {
-    background: rgba(31, 141, 237, 0.12) !important;
-    color: #1273c5 !important;
-    box-shadow: 0 2px 8px rgba(31, 141, 237, 0.2) !important;
+    background: rgba(31, 141, 237, 0.08) !important;
+    color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(31, 141, 237, 0.15) !important;
 }
 
 .bf-theme-gradient { 
@@ -465,9 +465,9 @@
     --bf-primary-dark: #764ba2; 
 }
 .bf-theme-gradient .bf-user-message .bf-message-text {
-    background: rgba(102, 126, 234, 0.12) !important;
-    color: #764ba2 !important;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2) !important;
+    background: rgba(102, 126, 234, 0.08) !important;
+    color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15) !important;
 }
 
 .bf-theme-glassmorphism .bf-chat-window {
@@ -476,9 +476,9 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 .bf-theme-glassmorphism .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.15) !important;
-    color: #4f46e5 !important;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25) !important;
+    background: rgba(99, 102, 241, 0.1) !important;
+    color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2) !important;
     backdrop-filter: blur(10px);
 }
 
@@ -494,9 +494,9 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
 }
 .bf-theme-dark .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.25) !important;
-    color: #c7d2fe !important;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4) !important;
+    background: rgba(99, 102, 241, 0.2) !important;
+    color: #e0e7ff !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
 }
 .bf-theme-dark .bf-input { 
     background: #374151; 
@@ -522,9 +522,9 @@
     --bf-primary-dark: #1f2937; 
 }
 .bf-theme-minimal .bf-user-message .bf-message-text {
-    background: rgba(0, 0, 0, 0.08) !important;
+    background: rgba(0, 0, 0, 0.05) !important;
     color: #1f2937 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
     `;
 
