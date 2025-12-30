@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.9.9
+ * Beautiful Flowise Chat Widget v2.0.0
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -24,13 +24,20 @@
         clearChatOnReload: false,
         debug: false,
         avatar: '\ud83e\udd16',
-        mode: 'popup'
+        mode: 'popup',
+        // Custom theme options
+        customUserMessageBg: null,
+        customUserMessageText: null,
+        customChatBg: null
     };
 
     const styles = `
 :root {
     --bf-primary-color: #6366f1;
     --bf-primary-dark: #4f46e5;
+    --bf-custom-user-msg-bg: rgba(99, 102, 241, 0.15);
+    --bf-custom-user-msg-text: #1f2937;
+    --bf-custom-chat-bg: #ffffff;
 }
 
 .bf-container * {
@@ -534,7 +541,7 @@
     box-shadow: none !important;
 }
 
-/* CUSTOM THEME - Fully Customizable with Single Color */
+/* CUSTOM THEME - Fully Customizable */
 .bf-theme-custom .bf-header {
     background: var(--bf-primary-color) !important;
 }
@@ -547,10 +554,25 @@
     background: var(--bf-primary-color) !important;
 }
 
+.bf-theme-custom .bf-chat-window {
+    background: var(--bf-custom-chat-bg) !important;
+}
+
+.bf-theme-custom .bf-messages {
+    background: var(--bf-custom-chat-bg) !important;
+}
+
+.bf-theme-custom .bf-input-container {
+    background: var(--bf-custom-chat-bg) !important;
+}
+
+.bf-theme-custom .bf-footer {
+    background: var(--bf-custom-chat-bg) !important;
+}
+
 .bf-theme-custom .bf-user-message .bf-message-text {
-    background: var(--bf-primary-color) !important;
-    opacity: 0.15 !important;
-    color: #1f2937 !important;
+    background: var(--bf-custom-user-msg-bg) !important;
+    color: var(--bf-custom-user-msg-text) !important;
     border: none !important;
     box-shadow: none !important;
 }
@@ -602,6 +624,7 @@
         init() {
             this.injectStyles();
             this.createWidget();
+            this.applyCustomThemeColors();
             this.attachEventListeners();
             
             // Load state from localStorage
@@ -610,6 +633,42 @@
             this.log('Chat ID:', this.chatId || 'Not yet assigned (will be created by Flowise)');
             this.log('Mode:', this.config.mode);
             this.log('Messages loaded:', this.messages.length);
+        }
+
+        applyCustomThemeColors() {
+            if (this.config.theme !== 'custom') return;
+            
+            const container = document.getElementById('beautiful-flowise-container');
+            if (!container) return;
+            
+            // Apply custom colors as CSS variables
+            if (this.config.customUserMessageBg) {
+                container.style.setProperty('--bf-custom-user-msg-bg', this.config.customUserMessageBg);
+            } else {
+                // Auto-generate light version of primary color
+                const rgba = this.hexToRgba(this.config.primaryColor, 0.15);
+                container.style.setProperty('--bf-custom-user-msg-bg', rgba);
+            }
+            
+            if (this.config.customUserMessageText) {
+                container.style.setProperty('--bf-custom-user-msg-text', this.config.customUserMessageText);
+            }
+            
+            if (this.config.customChatBg) {
+                container.style.setProperty('--bf-custom-chat-bg', this.config.customChatBg);
+            }
+        }
+
+        hexToRgba(hex, alpha) {
+            // Remove # if present
+            hex = hex.replace('#', '');
+            
+            // Parse hex values
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
         log(...args) {
