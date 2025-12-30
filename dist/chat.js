@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.6.6
+ * Beautiful Flowise Chat Widget v1.6.7
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -191,6 +191,7 @@
     display: flex;
     animation: fadeIn 0.3s;
     width: 100%;
+    padding: 0;
 }
 
 @keyframes fadeIn {
@@ -198,7 +199,7 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* CRITICAL: MESSAGE ALIGNMENT - EXTEND LEFTWARD */
+/* CRITICAL: MESSAGE ALIGNMENT - NO RIGHT MARGIN */
 .bf-message.bf-bot-message { 
     justify-content: flex-start;
 }
@@ -228,7 +229,7 @@
     color: #1f2937;
     font-size: 14px;
     line-height: 1.6;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: none !important;
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: keep-all;
@@ -239,11 +240,11 @@
     text-align: left;
 }
 
-/* DEFAULT THEME - User message */
+/* DEFAULT THEME - NO SHADOWS */
 .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.15);
     color: #1f2937;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: none !important;
 }
 
 .bf-message-time {
@@ -417,7 +418,7 @@
 .bf-theme-cloudflare .bf-user-message .bf-message-text {
     background: rgba(243, 128, 32, 0.15);
     color: #1f2937;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: none !important;
 }
 
 /* INTERCOM THEME */
@@ -428,10 +429,10 @@
 .bf-theme-intercom .bf-user-message .bf-message-text {
     background: rgba(31, 141, 237, 0.15);
     color: #1f2937;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: none !important;
 }
 
-/* GRADIENT THEME - NO GLOW */
+/* GRADIENT THEME */
 .bf-theme-gradient { 
     --bf-primary-color: #667eea; 
     --bf-primary-dark: #764ba2; 
@@ -439,7 +440,7 @@
 .bf-theme-gradient .bf-user-message .bf-message-text {
     background: rgba(102, 126, 234, 0.2);
     color: #ffffff;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: none !important;
 }
 
 /* GLASSMORPHISM THEME */
@@ -451,7 +452,7 @@
 .bf-theme-glassmorphism .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.25);
     color: #ffffff;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: none !important;
 }
 
 /* DARK THEME */
@@ -464,12 +465,12 @@
 .bf-theme-dark .bf-message-text { 
     background: #374151; 
     color: #f9fafb;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    box-shadow: none !important;
 }
 .bf-theme-dark .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.4);
     color: #ffffff;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    box-shadow: none !important;
 }
 .bf-theme-dark .bf-input { 
     background: #374151; 
@@ -498,7 +499,7 @@
 .bf-theme-minimal .bf-user-message .bf-message-text {
     background: rgba(0, 0, 0, 0.08);
     color: #1f2937;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: none !important;
 }
     `;
 
@@ -867,6 +868,7 @@
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
             html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
