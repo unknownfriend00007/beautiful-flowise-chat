@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.9.7
+ * Beautiful Flowise Chat Widget v1.9.8
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -551,6 +551,10 @@
             // DON'T generate chatId - let Flowise create it!
             this.chatId = null;
             
+            // Performance optimization - throttle scroll updates
+            this.lastScrollTime = 0;
+            this.scrollThrottle = 50; // ms
+            
             this.init();
         }
 
@@ -844,32 +848,29 @@
                 const decoder = new TextDecoder();
                 let fullText = '';
                 let buffer = '';
-                let streamEnded = false;
-
-                while (!streamEnded) {
+                
+                // Process stream immediately without waiting
+                while (true) {
                     const { value, done } = await reader.read();
-                    if (done) {
-                        streamEnded = true;
-                        break;
-                    }
+                    if (done) break;
 
+                    // Decode immediately
                     buffer += decoder.decode(value, { stream: true });
-                    let idx;
                     
-                    while ((idx = buffer.indexOf('\n')) !== -1) {
-                        const line = buffer.slice(0, idx).trim();
-                        buffer = buffer.slice(idx + 1);
+                    // Process all complete lines immediately
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || ''; // Keep incomplete line in buffer
+                    
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (!trimmed || trimmed.startsWith(':') || !trimmed.startsWith('data:')) continue;
 
-                        if (!line || line.startsWith(':') || !line.startsWith('data:')) continue;
-
-                        const payload = line.slice(5).trim();
-                        if (payload === '[DONE]' || payload === '"[DONE]"') {
-                            streamEnded = true;
-                            break;
-                        }
+                        const payload = trimmed.slice(5).trim();
+                        if (payload === '[DONE]' || payload === '"[DONE]"') continue;
 
                         let token = '';
                         let metadata = null;
+                        
                         try {
                             const obj = JSON.parse(payload);
                             if (obj && typeof obj === 'object') {
@@ -882,24 +883,26 @@
                                 }
                             }
                         } catch {
+                            // Try as plain string
                             if (payload.startsWith('"') && payload.endsWith('"')) {
                                 try {
                                     token = JSON.parse(payload);
                                 } catch {
-                                    token = payload;
+                                    token = payload.slice(1, -1);
                                 }
                             } else {
                                 token = payload;
                             }
                         }
 
-                        // Flowise returned chatId in metadata - save it!
+                        // Handle metadata
                         if (metadata && metadata.chatId && metadata.chatId !== this.chatId) {
                             this.chatId = metadata.chatId;
                             this.saveToStorage();
                             this.log('\u2705 ChatId assigned by Flowise (metadata):', this.chatId);
                         }
 
+                        // Display token immediately
                         if (token) {
                             fullText += token;
                             this.updatePlaceholderMessage(botMessageId, fullText, true);
@@ -1018,7 +1021,12 @@
                 messageDiv.classList.remove('bf-streaming');
             }
             
-            this.scrollToBottom();
+            // Throttled scroll to reduce reflow
+            const now = Date.now();
+            if (now - this.lastScrollTime > this.scrollThrottle) {
+                this.scrollToBottom();
+                this.lastScrollTime = now;
+            }
         }
 
         formatMarkdown(text) {
