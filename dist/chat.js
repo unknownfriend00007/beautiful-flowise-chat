@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.6.7
+ * Beautiful Flowise Chat Widget v1.6.8
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -187,11 +187,13 @@
 .bf-messages::-webkit-scrollbar { width: 6px; }
 .bf-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
+/* ============= CRITICAL MESSAGE LAYOUT ============= */
 .bf-message {
-    display: flex;
+    display: flex !important;
     animation: fadeIn 0.3s;
-    width: 100%;
-    padding: 0;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 @keyframes fadeIn {
@@ -199,32 +201,33 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* CRITICAL: MESSAGE ALIGNMENT - NO RIGHT MARGIN */
 .bf-message.bf-bot-message { 
-    justify-content: flex-start;
+    justify-content: flex-start !important;
 }
 
 .bf-message.bf-user-message { 
-    justify-content: flex-end;
+    justify-content: flex-end !important;
 }
 
 .bf-message-content {
-    display: flex;
-    flex-direction: column;
-    max-width: 75%;
+    display: flex !important;
+    flex-direction: column !important;
+    max-width: 75% !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .bf-bot-message .bf-message-content {
-    align-items: flex-start;
+    align-items: flex-start !important;
 }
 
 .bf-user-message .bf-message-content {
-    align-items: flex-end;
+    align-items: flex-end !important;
 }
 
 .bf-message-text {
     background: white;
-    padding: 12px 16px;
+    padding: 12px 16px !important;
     border-radius: 16px;
     color: #1f2937;
     font-size: 14px;
@@ -235,15 +238,17 @@
     word-break: keep-all;
     hyphens: none;
     white-space: pre-wrap;
-    display: inline-block;
-    width: fit-content;
-    text-align: left;
+    display: inline-block !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    text-align: left !important;
+    margin: 0 !important;
 }
 
-/* DEFAULT THEME - NO SHADOWS */
+/* DEFAULT THEME - ZERO SHADOWS */
 .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.15);
-    color: #1f2937;
+    background: rgba(99, 102, 241, 0.15) !important;
+    color: #1f2937 !important;
     box-shadow: none !important;
 }
 
@@ -416,8 +421,8 @@
     --bf-primary-dark: #d96b0f; 
 }
 .bf-theme-cloudflare .bf-user-message .bf-message-text {
-    background: rgba(243, 128, 32, 0.15);
-    color: #1f2937;
+    background: rgba(243, 128, 32, 0.15) !important;
+    color: #1f2937 !important;
     box-shadow: none !important;
 }
 
@@ -427,8 +432,8 @@
     --bf-primary-dark: #1273c5; 
 }
 .bf-theme-intercom .bf-user-message .bf-message-text {
-    background: rgba(31, 141, 237, 0.15);
-    color: #1f2937;
+    background: rgba(31, 141, 237, 0.15) !important;
+    color: #1f2937 !important;
     box-shadow: none !important;
 }
 
@@ -438,8 +443,8 @@
     --bf-primary-dark: #764ba2; 
 }
 .bf-theme-gradient .bf-user-message .bf-message-text {
-    background: rgba(102, 126, 234, 0.2);
-    color: #ffffff;
+    background: rgba(102, 126, 234, 0.2) !important;
+    color: #ffffff !important;
     box-shadow: none !important;
 }
 
@@ -450,8 +455,8 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 .bf-theme-glassmorphism .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.25);
-    color: #ffffff;
+    background: rgba(99, 102, 241, 0.25) !important;
+    color: #ffffff !important;
     box-shadow: none !important;
 }
 
@@ -463,13 +468,13 @@
 .bf-theme-dark .bf-chat-window { background: #1f2937; }
 .bf-theme-dark .bf-messages { background: #111827; }
 .bf-theme-dark .bf-message-text { 
-    background: #374151; 
-    color: #f9fafb;
+    background: #374151 !important; 
+    color: #f9fafb !important;
     box-shadow: none !important;
 }
 .bf-theme-dark .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.4);
-    color: #ffffff;
+    background: rgba(99, 102, 241, 0.4) !important;
+    color: #ffffff !important;
     box-shadow: none !important;
 }
 .bf-theme-dark .bf-input { 
@@ -497,8 +502,8 @@
     --bf-primary-dark: #1f2937; 
 }
 .bf-theme-minimal .bf-user-message .bf-message-text {
-    background: rgba(0, 0, 0, 0.08);
-    color: #1f2937;
+    background: rgba(0, 0, 0, 0.08) !important;
+    color: #1f2937 !important;
     box-shadow: none !important;
 }
     `;
@@ -868,7 +873,6 @@
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
             html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
