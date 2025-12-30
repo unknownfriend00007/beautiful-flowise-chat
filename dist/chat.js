@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.9.0
+ * Beautiful Flowise Chat Widget v1.9.1
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -564,9 +564,7 @@
             if (this.config.clearChatOnReload) {
                 this.messages = [];
                 this.chatId = null;
-                if (this.config.welcomeMessage) {
-                    this.addMessage(this.config.welcomeMessage, 'bot', false);
-                }
+                this.initializeWithWelcome();
                 return;
             }
 
@@ -582,24 +580,31 @@
                     }
                     
                     // Load messages if exists
-                    if (data.messages && Array.isArray(data.messages)) {
+                    if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
                         this.messages = data.messages;
                         this.restoreMessages();
-                    } else if (this.config.welcomeMessage) {
-                        this.addMessage(this.config.welcomeMessage, 'bot', false);
+                    } else {
+                        // No messages in storage, show welcome
+                        this.initializeWithWelcome();
                     }
                 } else {
-                    this.messages = [];
-                    if (this.config.welcomeMessage) {
-                        this.addMessage(this.config.welcomeMessage, 'bot', false);
-                    }
+                    // No storage, show welcome
+                    this.initializeWithWelcome();
                 }
             } catch (e) {
                 this.log('Error loading from storage:', e);
-                this.messages = [];
-                if (this.config.welcomeMessage) {
-                    this.addMessage(this.config.welcomeMessage, 'bot', false);
-                }
+                this.initializeWithWelcome();
+            }
+        }
+
+        initializeWithWelcome() {
+            this.messages = [];
+            if (this.config.welcomeMessage) {
+                // Add welcome message to BOTH UI and messages array
+                this.messages.push({ role: 'bot', content: this.config.welcomeMessage });
+                this.addMessageToUI(this.config.welcomeMessage, 'bot');
+                // Save the welcome message to storage
+                this.saveToStorage();
             }
         }
 
@@ -622,13 +627,8 @@
             const messagesContainer = document.getElementById('bf-messages');
             messagesContainer.innerHTML = '';
             
-            if (this.messages.length === 0 && this.config.welcomeMessage) {
-                this.addMessage(this.config.welcomeMessage, 'bot', false);
-                return;
-            }
-            
             this.messages.forEach(msg => {
-                this.addMessage(msg.content, msg.role, false);
+                this.addMessageToUI(msg.content, msg.role);
             });
             
             this.scrollToBottom();
@@ -649,9 +649,7 @@
                 messagesContainer.innerHTML = '';
                 
                 // Show welcome message
-                if (this.config.welcomeMessage) {
-                    this.addMessage(this.config.welcomeMessage, 'bot', false);
-                }
+                this.initializeWithWelcome();
                 
                 this.log('Chat reset. ChatId cleared - will be assigned by Flowise on next message');
             }
@@ -672,8 +670,8 @@
             container.style.setProperty('--bf-primary-color', this.config.primaryColor);
             
             const chatWindowDisplay = this.config.mode === 'fullscreen' ? 'flex' : 'none';
-            const showWelcome = this.messages.length === 0 && this.config.welcomeMessage;
             
+            // Don't pre-render welcome message - it will be added via loadFromStorage
             container.innerHTML = `
                 <button class="bf-chat-button" id="bf-toggle-button">
                     <svg class="bf-button-icon bf-button-open" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -703,15 +701,7 @@
                             <button class="bf-minimize-btn" id="bf-minimize">−</button>
                         </div>
                     </div>
-                    <div class="bf-messages" id="bf-messages">
-                        ${showWelcome ? `
-                        <div class="bf-message bf-bot-message">
-                            <div class="bf-message-content">
-                                <div class="bf-message-text">${this.escapeHtml(this.config.welcomeMessage)}</div>
-                                ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
-                            </div>
-                        </div>` : ''}
-                    </div>
+                    <div class="bf-messages" id="bf-messages"></div>
                     <div class="bf-input-container">
                         <textarea class="bf-input" id="bf-input" placeholder="${this.config.placeholder}" rows="1"></textarea>
                         <button class="bf-send-btn" id="bf-send">${this.config.sendButtonText}</button>
@@ -777,7 +767,7 @@
             const message = input.value.trim();
             if (!message || this.currentStreamingMessageId) return;
 
-            // Add user message to UI and storage
+            // Add user message
             this.addMessage(message, 'user');
             
             input.value = '';
@@ -953,6 +943,30 @@
             this.saveToStorage();
         }
 
+        addMessage(text, sender) {
+            // Add to storage
+            this.addMessageToStorage(text, sender);
+            // Add to UI
+            this.addMessageToUI(text, sender);
+        }
+
+        addMessageToUI(text, sender) {
+            const messagesContainer = document.getElementById('bf-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `bf-message bf-${sender}-message`;
+            
+            const formattedText = sender === 'bot' ? this.formatMarkdown(text) : this.escapeHtml(text);
+            
+            messageDiv.innerHTML = `
+                <div class="bf-message-content">
+                    <div class="bf-message-text">${formattedText}</div>
+                    ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
+                </div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            this.scrollToBottom();
+        }
+
         createPlaceholderMessage() {
             const messagesContainer = document.getElementById('bf-messages');
             const messageId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
@@ -994,27 +1008,6 @@
             }
             
             this.scrollToBottom();
-        }
-
-        addMessage(text, sender, shouldSave = true) {
-            const messagesContainer = document.getElementById('bf-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `bf-message bf-${sender}-message`;
-            
-            const formattedText = sender === 'bot' ? this.formatMarkdown(text) : this.escapeHtml(text);
-            
-            messageDiv.innerHTML = `
-                <div class="bf-message-content">
-                    <div class="bf-message-text">${formattedText}</div>
-                    ${this.config.showTimestamp ? `<div class="bf-message-time">${this.getTimeString()}</div>` : ''}
-                </div>
-            `;
-            messagesContainer.appendChild(messageDiv);
-            this.scrollToBottom();
-            
-            if (shouldSave) {
-                this.addMessageToStorage(text, sender);
-            }
         }
 
         formatMarkdown(text) {
