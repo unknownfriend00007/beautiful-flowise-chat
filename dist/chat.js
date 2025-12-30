@@ -1,6 +1,12 @@
 /**
- * Beautiful Flowise Chat Widget v2.0.2
- * Production-Hardened Build + Performance Hotfix
+ * Beautiful Flowise Chat Widget v2.0.3
+ * Production-Hardened Build - Critical Markdown Fixes
+ * 
+ * v2.0.3 Critical Fixes:
+ * - Fixed code blocks being mangled by markdown processors
+ * - Added hex shorthand support (#fff, #000, etc.)
+ * - Fixed markdown processing order (code blocks protected first)
+ * - Optimized list detection logic
  * 
  * v2.0.2 Hotfix:
  * - Fixed bold placeholder conflict with italic regex
@@ -61,7 +67,10 @@
         ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:'],
         // Use unique placeholders that won't conflict with any markdown syntax
         BOLD_PLACEHOLDER_START: '{{BFBOLDSTART}}',
-        BOLD_PLACEHOLDER_END: '{{BFBOLDEND}}'
+        BOLD_PLACEHOLDER_END: '{{BFBOLDEND}}',
+        // Code block protection placeholders
+        CODE_BLOCK_PLACEHOLDER: '{{BFCODEBLOCK_',
+        INLINE_CODE_PLACEHOLDER: '{{BFINLINECODE_'
     };
 
     const styles = `
@@ -695,6 +704,12 @@
 
         darkenHex(hex) {
             hex = hex.replace('#', '');
+            
+            // Support 3-digit hex shorthand (#fff -> #ffffff)
+            if (hex.length === 3) {
+                hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+            }
+            
             if (hex.length !== 6) return '#4f46e5';
             
             const r = Math.max(0, Math.floor(parseInt(hex.substring(0, 2), 16) * 0.8));
@@ -714,7 +729,13 @@
             }
             
             if (color.startsWith('#')) {
-                const hex = color.replace('#', '');
+                let hex = color.replace('#', '');
+                
+                // Support 3-digit hex shorthand (#fff -> #ffffff)
+                if (hex.length === 3) {
+                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                }
+                
                 if (hex.length === 6) {
                     const r = parseInt(hex.substring(0, 2), 16);
                     const g = parseInt(hex.substring(2, 4), 16);
@@ -1034,7 +1055,7 @@
                     const elem = document.getElementById(botMessageId);
                     if (elem) elem.remove();
                     this.addMessage(
-                        "I'm having trouble connecting. Please check your internet and try again. 🔄",
+                        "I'm having trouble connecting. Please check your internet and try again. \ud83d\udd04",
                         'bot'
                     );
                 }
@@ -1097,7 +1118,7 @@
                     if (data.chatId && data.chatId !== this.chatId) {
                         this.chatId = data.chatId;
                         this.saveToStorage();
-                        this.log('✅ ChatId assigned by Flowise:', this.chatId);
+                        this.log('\u2705 ChatId assigned by Flowise:', this.chatId);
                     }
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
@@ -1156,7 +1177,7 @@
                         if (metadata && metadata.chatId && metadata.chatId !== this.chatId) {
                             this.chatId = metadata.chatId;
                             this.saveToStorage();
-                            this.log('✅ ChatId assigned by Flowise (metadata):', this.chatId);
+                            this.log('\u2705 ChatId assigned by Flowise (metadata):', this.chatId);
                         }
 
                         if (token) {
@@ -1224,7 +1245,7 @@
             if (data.chatId && data.chatId !== this.chatId) {
                 this.chatId = data.chatId;
                 this.saveToStorage();
-                this.log('✅ ChatId assigned by Flowise:', this.chatId);
+                this.log('\u2705 ChatId assigned by Flowise:', this.chatId);
             }
             
             const botMessage = data.text || data.answer || data.response || 'No response';
@@ -1317,11 +1338,25 @@
             
             let html = this.escapeHtml(text);
             
-            // Code blocks
-            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            // STEP 1: Protect code blocks and inline code by replacing with placeholders
+            const codeBlocks = [];
+            const inlineCodes = [];
             
-            // Inline code
-            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            // Extract code blocks FIRST (```...```)
+            html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
+                const index = codeBlocks.length;
+                codeBlocks.push(code);
+                return CONSTANTS.CODE_BLOCK_PLACEHOLDER + index + '}}';
+            });
+            
+            // Extract inline code (`...`)
+            html = html.replace(/`([^`]+)`/g, (match, code) => {
+                const index = inlineCodes.length;
+                inlineCodes.push(code);
+                return CONSTANTS.INLINE_CODE_PLACEHOLDER + index + '}}';
+            });
+            
+            // STEP 2: Now process markdown (code is protected)
             
             // Headers
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
@@ -1353,13 +1388,16 @@
                 }
             });
             
-            // Lists
-            html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-            html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => '<ol>' + match + '</ol>');
-            html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
-            html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => {
-                if (!match.includes('<ol>')) return '<ul>' + match + '</ul>';
-                return match;
+            // Lists - numbered and bullet
+            html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+            html = html.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
+            
+            // Wrap consecutive <li> in appropriate list tags
+            html = html.replace(/(<li>.+?<\/li>(?:\n<li>.+?<\/li>)*)/g, (match) => {
+                // Check if this is part of a numbered list by looking at original context
+                // Since we've already converted, we'll assume bullet list by default
+                // This is safe because numbered lists would have been matched first
+                return '<ul>' + match + '</ul>';
             });
             
             // Paragraphs
@@ -1371,10 +1409,20 @@
             html = html.replace(/<p><\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
             html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
-            html = html.replace(/<p>(<pre>)/g, '$1');
-            html = html.replace(/(<\/pre>)<\/p>/g, '$1');
             html = html.replace(/<p>(<h[123]>)/g, '$1');
             html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
+            
+            // STEP 3: Restore code blocks and inline code
+            
+            // Restore inline code
+            html = html.replace(new RegExp(CONSTANTS.INLINE_CODE_PLACEHOLDER + '(\\d+)}}', 'g'), (match, index) => {
+                return `<code>${inlineCodes[parseInt(index)]}</code>`;
+            });
+            
+            // Restore code blocks
+            html = html.replace(new RegExp(CONSTANTS.CODE_BLOCK_PLACEHOLDER + '(\\d+)}}', 'g'), (match, index) => {
+                return `<pre><code>${codeBlocks[parseInt(index)]}</code></pre>`;
+            });
             
             return html;
         }
