@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.7.2
+ * Beautiful Flowise Chat Widget v1.8.0
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -45,7 +45,6 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* POPUP MODE */
 .bf-mode-popup {
     bottom: 20px;
     right: 20px;
@@ -57,7 +56,6 @@
     right: auto;
 }
 
-/* FULLSCREEN MODE */
 .bf-mode-fullscreen {
     top: 0;
     left: 0;
@@ -97,7 +95,6 @@
     animation: slideUp 0.3s ease;
 }
 
-/* Popup mode window */
 .bf-mode-popup .bf-chat-window {
     bottom: 80px;
     right: 0;
@@ -114,7 +111,6 @@
     right: auto;
 }
 
-/* Fullscreen mode window */
 .bf-mode-fullscreen .bf-chat-window {
     position: fixed;
     top: 0;
@@ -216,7 +212,6 @@
 .bf-messages::-webkit-scrollbar { width: 6px; }
 .bf-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-/* ============= CRITICAL MESSAGE LAYOUT ============= */
 .bf-message {
     display: flex !important;
     animation: fadeIn 0.3s;
@@ -274,7 +269,6 @@
     margin: 0 !important;
 }
 
-/* DEFAULT THEME - ZERO SHADOWS */
 .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.15) !important;
     color: #1f2937 !important;
@@ -442,9 +436,7 @@
     color: var(--bf-primary-color);
 }
 
-/* ========== THEMES ========== */
-
-/* CLOUDFLARE THEME */
+/* THEMES */
 .bf-theme-cloudflare { 
     --bf-primary-color: #f38020; 
     --bf-primary-dark: #d96b0f; 
@@ -455,7 +447,6 @@
     box-shadow: none !important;
 }
 
-/* INTERCOM THEME */
 .bf-theme-intercom { 
     --bf-primary-color: #1f8ded; 
     --bf-primary-dark: #1273c5; 
@@ -466,7 +457,6 @@
     box-shadow: none !important;
 }
 
-/* GRADIENT THEME */
 .bf-theme-gradient { 
     --bf-primary-color: #667eea; 
     --bf-primary-dark: #764ba2; 
@@ -477,7 +467,6 @@
     box-shadow: none !important;
 }
 
-/* GLASSMORPHISM THEME */
 .bf-theme-glassmorphism .bf-chat-window {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
@@ -489,7 +478,6 @@
     box-shadow: none !important;
 }
 
-/* DARK THEME */
 .bf-theme-dark { 
     --bf-primary-color: #6366f1; 
     --bf-primary-dark: #4f46e5; 
@@ -525,7 +513,6 @@
 .bf-theme-dark .bf-branding { color: #9ca3af; }
 .bf-theme-dark .bf-message-time { color: #9ca3af; }
 
-/* MINIMAL THEME */
 .bf-theme-minimal { 
     --bf-primary-color: #000000; 
     --bf-primary-dark: #1f2937; 
@@ -537,24 +524,24 @@
 }
     `;
 
-    function generateUUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-
     class BeautifulFlowiseChat {
         constructor(config) {
             this.config = { ...defaults, ...config };
             this.chatflowid = config.chatflowid;
             this.apiHost = config.apiHost;
-            this.storageKey = `${this.chatflowid}_EXTERNAL`;
+            
+            // Storage keys
+            this.storageKey = `${this.chatflowid}_BF_CHAT`;
+            this.chatIdKey = `${this.chatflowid}_BF_CHATID`;
+            
             this.isOpen = this.config.mode === 'fullscreen';
             this.currentStreamingMessageId = null;
+            this.messages = [];
             
-            this.loadFromStorage();
+            // Load or create chatId - SEPARATE from messages
+            this.chatId = this.loadChatId() || this.generateChatId();
+            this.saveChatId();
+            
             this.init();
         }
 
@@ -563,67 +550,77 @@
             this.createWidget();
             this.attachEventListeners();
             
+            // Load messages from storage
             if (!this.config.clearChatOnReload) {
-                this.restoreMessages();
+                this.loadMessages();
             }
             
             this.log('Chat ID:', this.chatId);
             this.log('Mode:', this.config.mode);
             this.log('Clear on reload:', this.config.clearChatOnReload);
+            this.log('Messages loaded:', this.messages.length);
         }
 
         log(...args) {
             if (this.config.debug) console.log('[BeautifulFlowise]', ...args);
         }
 
-        loadFromStorage() {
+        generateChatId() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        loadChatId() {
+            try {
+                return localStorage.getItem(this.chatIdKey);
+            } catch (e) {
+                this.log('Error loading chatId:', e);
+                return null;
+            }
+        }
+
+        saveChatId() {
+            try {
+                localStorage.setItem(this.chatIdKey, this.chatId);
+                this.log('ChatId saved:', this.chatId);
+            } catch (e) {
+                this.log('Error saving chatId:', e);
+            }
+        }
+
+        loadMessages() {
             try {
                 const data = localStorage.getItem(this.storageKey);
                 if (data) {
-                    const parsed = JSON.parse(data);
-                    this.chatId = parsed.chatId || generateUUID();
-                    this.chatHistory = parsed.chatHistory || [];
-                    this.log('Loaded from storage:', { chatId: this.chatId, messages: this.chatHistory.length });
+                    this.messages = JSON.parse(data);
+                    this.log('Loaded messages:', this.messages.length);
+                    this.restoreMessages();
                 } else {
-                    this.chatId = generateUUID();
-                    this.chatHistory = [];
+                    this.messages = [];
+                    if (this.config.welcomeMessage) {
+                        this.addMessage(this.config.welcomeMessage, 'bot', false);
+                    }
                 }
             } catch (e) {
-                this.log('Storage load error:', e);
-                this.chatId = generateUUID();
-                this.chatHistory = [];
-            }
-        }
-
-        saveToStorage() {
-            if (this.config.clearChatOnReload) return;
-            
-            try {
-                const data = {
-                    chatId: this.chatId,
-                    chatHistory: this.chatHistory
-                };
-                localStorage.setItem(this.storageKey, JSON.stringify(data));
-                this.log('Saved to storage:', { chatId: this.chatId, messages: this.chatHistory.length });
-            } catch (e) {
-                this.log('Storage save error:', e);
-            }
-        }
-
-        resetConversation() {
-            if (confirm('Are you sure you want to clear the chat history?')) {
-                localStorage.removeItem(this.storageKey);
-                this.chatId = generateUUID();
-                this.chatHistory = [];
-                
-                const messagesContainer = document.getElementById('bf-messages');
-                messagesContainer.innerHTML = '';
-                
+                this.log('Error loading messages:', e);
+                this.messages = [];
                 if (this.config.welcomeMessage) {
                     this.addMessage(this.config.welcomeMessage, 'bot', false);
                 }
-                
-                this.log('Chat reset. New Chat ID:', this.chatId);
+            }
+        }
+
+        saveMessages() {
+            if (this.config.clearChatOnReload) return;
+            
+            try {
+                localStorage.setItem(this.storageKey, JSON.stringify(this.messages));
+                this.log('Messages saved:', this.messages.length);
+            } catch (e) {
+                this.log('Error saving messages:', e);
             }
         }
 
@@ -631,17 +628,43 @@
             const messagesContainer = document.getElementById('bf-messages');
             messagesContainer.innerHTML = '';
             
-            if (this.chatHistory.length === 0 && this.config.welcomeMessage) {
+            if (this.messages.length === 0 && this.config.welcomeMessage) {
                 this.addMessage(this.config.welcomeMessage, 'bot', false);
                 return;
             }
             
-            this.chatHistory.forEach(msg => {
+            this.messages.forEach(msg => {
                 this.addMessage(msg.content, msg.role, false);
             });
             
             this.scrollToBottom();
-            this.log('Restored', this.chatHistory.length, 'messages');
+            this.log('Restored', this.messages.length, 'messages');
+        }
+
+        resetConversation() {
+            if (confirm('Are you sure you want to clear the chat history?')) {
+                // Clear storage
+                localStorage.removeItem(this.storageKey);
+                localStorage.removeItem(this.chatIdKey);
+                
+                // Generate new chatId
+                this.chatId = this.generateChatId();
+                this.saveChatId();
+                
+                // Clear messages
+                this.messages = [];
+                
+                // Clear UI
+                const messagesContainer = document.getElementById('bf-messages');
+                messagesContainer.innerHTML = '';
+                
+                // Show welcome message
+                if (this.config.welcomeMessage) {
+                    this.addMessage(this.config.welcomeMessage, 'bot', false);
+                }
+                
+                this.log('Chat reset. New Chat ID:', this.chatId);
+            }
         }
 
         injectStyles() {
@@ -659,7 +682,7 @@
             container.style.setProperty('--bf-primary-color', this.config.primaryColor);
             
             const chatWindowDisplay = this.config.mode === 'fullscreen' ? 'flex' : 'none';
-            const showWelcome = this.chatHistory.length === 0 && this.config.welcomeMessage;
+            const showWelcome = this.messages.length === 0 && this.config.welcomeMessage;
             
             container.innerHTML = `
                 <button class="bf-chat-button" id="bf-toggle-button">
@@ -764,9 +787,8 @@
             const message = input.value.trim();
             if (!message || this.currentStreamingMessageId) return;
 
+            // Add user message to UI and storage
             this.addMessage(message, 'user');
-            this.chatHistory.push({ role: 'user', content: message });
-            this.saveToStorage();
             
             input.value = '';
             input.style.height = 'auto';
@@ -809,14 +831,16 @@
                 const contentType = response.headers.get('content-type');
                 if (!contentType?.includes('text/event-stream')) {
                     const data = await response.json();
-                    if (data.chatId) {
+                    // If API returns a different chatId, update it
+                    if (data.chatId && data.chatId !== this.chatId) {
                         this.chatId = data.chatId;
-                        this.saveToStorage(); // CRITICAL: Save immediately after chatId update
+                        this.saveChatId();
+                        this.log('ChatId updated from API:', this.chatId);
                     }
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
-                    this.chatHistory.push({ role: 'bot', content: botMessage });
-                    this.saveToStorage();
+                    // Remove placeholder and add real message
+                    this.addMessageToStorage(botMessage, 'bot');
                     return;
                 }
 
@@ -873,10 +897,11 @@
                             }
                         }
 
-                        if (metadata && metadata.chatId) {
+                        // Update chatId if provided in metadata
+                        if (metadata && metadata.chatId && metadata.chatId !== this.chatId) {
                             this.chatId = metadata.chatId;
-                            this.saveToStorage(); // CRITICAL: Save immediately after chatId update
-                            this.log('Updated Chat ID from metadata:', this.chatId);
+                            this.saveChatId();
+                            this.log('ChatId updated from metadata:', this.chatId);
                         }
 
                         if (token) {
@@ -888,8 +913,7 @@
 
                 if (fullText) {
                     this.updatePlaceholderMessage(botMessageId, fullText, false);
-                    this.chatHistory.push({ role: 'bot', content: fullText });
-                    this.saveToStorage();
+                    this.addMessageToStorage(fullText, 'bot');
                 } else {
                     throw new Error('No text streamed');
                 }
@@ -913,15 +937,21 @@
             if (!response.ok) throw new Error('API failed');
             const data = await response.json();
             
-            if (data.chatId) {
+            // Update chatId if API returns a different one
+            if (data.chatId && data.chatId !== this.chatId) {
                 this.chatId = data.chatId;
-                this.saveToStorage(); // CRITICAL: Save immediately after chatId update
+                this.saveChatId();
+                this.log('ChatId updated from API:', this.chatId);
             }
             
             const botMessage = data.text || data.answer || data.response || 'No response';
             this.updatePlaceholderMessage(botMessageId, botMessage, false);
-            this.chatHistory.push({ role: 'bot', content: botMessage });
-            this.saveToStorage();
+            this.addMessageToStorage(botMessage, 'bot');
+        }
+
+        addMessageToStorage(content, role) {
+            this.messages.push({ role, content });
+            this.saveMessages();
         }
 
         createPlaceholderMessage() {
@@ -982,6 +1012,10 @@
             `;
             messagesContainer.appendChild(messageDiv);
             this.scrollToBottom();
+            
+            if (shouldSave) {
+                this.addMessageToStorage(text, sender);
+            }
         }
 
         formatMarkdown(text) {
