@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.5.0
+ * Beautiful Flowise Chat Widget v1.5.1
  * Buttery smooth streaming with proper memory retention
  * Created by RPS
  */
@@ -441,12 +441,20 @@
 }
     `;
 
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
     class BeautifulFlowiseChat {
         constructor(config) {
             this.config = { ...defaults, ...config };
             this.chatflowid = config.chatflowid;
             this.apiHost = config.apiHost;
-            this.sessionId = this.generateSessionId();
+            this.chatId = generateUUID();
             this.conversationHistory = [];
             this.isOpen = false;
             this.currentStreamingMessageId = null;
@@ -457,11 +465,7 @@
             this.injectStyles();
             this.createWidget();
             this.attachEventListeners();
-            this.log('Session ID:', this.sessionId);
-        }
-
-        generateSessionId() {
-            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            this.log('Chat ID:', this.chatId);
         }
 
         log(...args) {
@@ -598,9 +602,7 @@
                     body: JSON.stringify({ 
                         question: message, 
                         streaming: true,
-                        overrideConfig: {
-                            sessionId: this.sessionId
-                        }
+                        chatId: this.chatId
                     })
                 });
 
@@ -609,6 +611,7 @@
                 const contentType = response.headers.get('content-type');
                 if (!contentType?.includes('text/event-stream')) {
                     const data = await response.json();
+                    if (data.chatId) this.chatId = data.chatId;
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
                     this.conversationHistory.push([message, botMessage]);
@@ -645,12 +648,17 @@
                         }
 
                         let token = '';
+                        let metadata = null;
                         try {
                             const obj = JSON.parse(payload);
-                            if (obj && typeof obj === 'object' && obj.event === 'token' && obj.data) {
-                                token = obj.data;
-                            } else if (typeof obj === 'string') {
-                                token = obj;
+                            if (obj && typeof obj === 'object') {
+                                if (obj.event === 'token' && obj.data) {
+                                    token = obj.data;
+                                } else if (obj.event === 'metadata' && obj.data) {
+                                    metadata = obj.data;
+                                } else if (typeof obj === 'string') {
+                                    token = obj;
+                                }
                             }
                         } catch {
                             if (payload.startsWith('"') && payload.endsWith('"')) {
@@ -662,6 +670,11 @@
                             } else {
                                 token = payload;
                             }
+                        }
+
+                        if (metadata && metadata.chatId) {
+                            this.chatId = metadata.chatId;
+                            this.log('Updated Chat ID from metadata:', this.chatId);
                         }
 
                         if (token) {
@@ -693,14 +706,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     question: message,
-                    overrideConfig: {
-                        sessionId: this.sessionId
-                    }
+                    chatId: this.chatId
                 })
             });
 
             if (!response.ok) throw new Error('API failed');
             const data = await response.json();
+            
+            if (data.chatId) this.chatId = data.chatId;
             
             const botMessage = data.text || data.answer || data.response || 'No response';
             this.updatePlaceholderMessage(botMessageId, botMessage, false);
