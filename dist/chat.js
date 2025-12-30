@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.6.8
+ * Beautiful Flowise Chat Widget v1.7.0
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -21,6 +21,7 @@
         showTimestamp: true,
         enableStreaming: true,
         enableMarkdown: true,
+        persistConversation: true,
         debug: false,
         avatar: '\ud83e\udd16',
         mode: 'popup' // 'popup' or 'fullscreen'
@@ -143,7 +144,7 @@
     flex-shrink: 0;
 }
 
-.bf-header-content { display: flex; align-items: center; gap: 12px; }
+.bf-header-content { display: flex; align-items: center; gap: 12px; flex: 1; }
 
 .bf-avatar {
     width: 40px;
@@ -159,6 +160,31 @@
 .bf-title { font-size: 16px; font-weight: 600; }
 .bf-subtitle { font-size: 12px; opacity: 0.9; }
 
+.bf-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.bf-reset-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.bf-reset-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
 .bf-minimize-btn {
     background: rgba(255,255,255,0.2);
     border: none;
@@ -168,6 +194,9 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .bf-mode-fullscreen .bf-minimize-btn {
@@ -521,10 +550,20 @@
             this.config = { ...defaults, ...config };
             this.chatflowid = config.chatflowid;
             this.apiHost = config.apiHost;
-            this.chatId = generateUUID();
+            this.storageKey = `bf-chat-${this.chatflowid}`;
             this.conversationHistory = [];
             this.isOpen = this.config.mode === 'fullscreen';
             this.currentStreamingMessageId = null;
+            
+            // Load or generate chatId
+            if (this.config.persistConversation) {
+                const stored = this.loadFromStorage();
+                this.chatId = stored.chatId || generateUUID();
+                this.conversationHistory = stored.messages || [];
+            } else {
+                this.chatId = generateUUID();
+            }
+            
             this.init();
         }
 
@@ -532,12 +571,81 @@
             this.injectStyles();
             this.createWidget();
             this.attachEventListeners();
+            
+            // Restore messages if persistence enabled
+            if (this.config.persistConversation && this.conversationHistory.length > 0) {
+                this.restoreMessages();
+            }
+            
             this.log('Chat ID:', this.chatId);
             this.log('Mode:', this.config.mode);
         }
 
         log(...args) {
             if (this.config.debug) console.log('[BeautifulFlowise]', ...args);
+        }
+
+        loadFromStorage() {
+            try {
+                const data = localStorage.getItem(this.storageKey);
+                return data ? JSON.parse(data) : {};
+            } catch (e) {
+                this.log('Storage load error:', e);
+                return {};
+            }
+        }
+
+        saveToStorage() {
+            if (!this.config.persistConversation) return;
+            try {
+                localStorage.setItem(this.storageKey, JSON.stringify({
+                    chatId: this.chatId,
+                    messages: this.conversationHistory,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                this.log('Storage save error:', e);
+            }
+        }
+
+        resetConversation() {
+            if (confirm('Are you sure you want to clear the chat history?')) {
+                // Clear storage
+                localStorage.removeItem(this.storageKey);
+                
+                // Generate new chatId
+                this.chatId = generateUUID();
+                this.conversationHistory = [];
+                
+                // Clear UI
+                const messagesContainer = document.getElementById('bf-messages');
+                messagesContainer.innerHTML = '';
+                
+                // Show welcome message
+                if (this.config.welcomeMessage) {
+                    this.addMessage(this.config.welcomeMessage, 'bot', false);
+                }
+                
+                this.log('Chat reset. New Chat ID:', this.chatId);
+            }
+        }
+
+        restoreMessages() {
+            const messagesContainer = document.getElementById('bf-messages');
+            messagesContainer.innerHTML = '';
+            
+            // Add welcome message first
+            if (this.config.welcomeMessage) {
+                this.addMessage(this.config.welcomeMessage, 'bot', false);
+            }
+            
+            // Restore conversation
+            this.conversationHistory.forEach(([userMsg, botMsg]) => {
+                this.addMessage(userMsg, 'user', false);
+                this.addMessage(botMsg, 'bot', false);
+            });
+            
+            this.scrollToBottom();
         }
 
         injectStyles() {
@@ -575,10 +683,18 @@
                                 <div class="bf-subtitle">${this.config.subtitle}</div>
                             </div>
                         </div>
-                        <button class="bf-minimize-btn" id="bf-minimize">−</button>
+                        <div class="bf-header-actions">
+                            <button class="bf-reset-btn" id="bf-reset" title="Reset Chat">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="1 4 1 10 7 10"></polyline>
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                </svg>
+                            </button>
+                            <button class="bf-minimize-btn" id="bf-minimize">−</button>
+                        </div>
                     </div>
                     <div class="bf-messages" id="bf-messages">
-                        ${this.config.welcomeMessage ? `
+                        ${this.config.welcomeMessage && this.conversationHistory.length === 0 ? `
                         <div class="bf-message bf-bot-message">
                             <div class="bf-message-content">
                                 <div class="bf-message-text">${this.escapeHtml(this.config.welcomeMessage)}</div>
@@ -606,6 +722,7 @@
                 minimizeBtn.addEventListener('click', () => this.toggleChat());
             }
             
+            document.getElementById('bf-reset').addEventListener('click', () => this.resetConversation());
             document.getElementById('bf-send').addEventListener('click', () => this.sendMessage());
             
             const input = document.getElementById('bf-input');
@@ -696,6 +813,7 @@
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
                     this.conversationHistory.push([message, botMessage]);
+                    this.saveToStorage();
                     return;
                 }
 
@@ -771,6 +889,7 @@
                 if (fullText) {
                     this.updatePlaceholderMessage(botMessageId, fullText, false);
                     this.conversationHistory.push([message, fullText]);
+                    this.saveToStorage();
                 } else {
                     throw new Error('No text streamed');
                 }
@@ -799,6 +918,7 @@
             const botMessage = data.text || data.answer || data.response || 'No response';
             this.updatePlaceholderMessage(botMessageId, botMessage, false);
             this.conversationHistory.push([message, botMessage]);
+            this.saveToStorage();
         }
 
         createPlaceholderMessage() {
@@ -844,7 +964,7 @@
             this.scrollToBottom();
         }
 
-        addMessage(text, sender) {
+        addMessage(text, sender, shouldSave = true) {
             const messagesContainer = document.getElementById('bf-messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `bf-message bf-${sender}-message`;
