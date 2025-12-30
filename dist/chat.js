@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.8.0
+ * Beautiful Flowise Chat Widget v1.9.0
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -530,17 +530,15 @@
             this.chatflowid = config.chatflowid;
             this.apiHost = config.apiHost;
             
-            // Storage keys
-            this.storageKey = `${this.chatflowid}_BF_CHAT`;
-            this.chatIdKey = `${this.chatflowid}_BF_CHATID`;
+            // Storage key - using official Flowise pattern
+            this.storageKey = `${this.chatflowid}_INTERNAL`;
             
             this.isOpen = this.config.mode === 'fullscreen';
             this.currentStreamingMessageId = null;
             this.messages = [];
             
-            // Load or create chatId - SEPARATE from messages
-            this.chatId = this.loadChatId() || this.generateChatId();
-            this.saveChatId();
+            // DON'T generate chatId - let Flowise create it!
+            this.chatId = null;
             
             this.init();
         }
@@ -550,14 +548,11 @@
             this.createWidget();
             this.attachEventListeners();
             
-            // Load messages from storage
-            if (!this.config.clearChatOnReload) {
-                this.loadMessages();
-            }
+            // Load state from localStorage
+            this.loadFromStorage();
             
-            this.log('Chat ID:', this.chatId);
+            this.log('Chat ID:', this.chatId || 'Not yet assigned (will be created by Flowise)');
             this.log('Mode:', this.config.mode);
-            this.log('Clear on reload:', this.config.clearChatOnReload);
             this.log('Messages loaded:', this.messages.length);
         }
 
@@ -565,39 +560,34 @@
             if (this.config.debug) console.log('[BeautifulFlowise]', ...args);
         }
 
-        generateChatId() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0;
-                const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
-
-        loadChatId() {
-            try {
-                return localStorage.getItem(this.chatIdKey);
-            } catch (e) {
-                this.log('Error loading chatId:', e);
-                return null;
+        loadFromStorage() {
+            if (this.config.clearChatOnReload) {
+                this.messages = [];
+                this.chatId = null;
+                if (this.config.welcomeMessage) {
+                    this.addMessage(this.config.welcomeMessage, 'bot', false);
+                }
+                return;
             }
-        }
 
-        saveChatId() {
             try {
-                localStorage.setItem(this.chatIdKey, this.chatId);
-                this.log('ChatId saved:', this.chatId);
-            } catch (e) {
-                this.log('Error saving chatId:', e);
-            }
-        }
-
-        loadMessages() {
-            try {
-                const data = localStorage.getItem(this.storageKey);
-                if (data) {
-                    this.messages = JSON.parse(data);
-                    this.log('Loaded messages:', this.messages.length);
-                    this.restoreMessages();
+                const stored = localStorage.getItem(this.storageKey);
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    
+                    // Load chatId if exists
+                    if (data.chatId) {
+                        this.chatId = data.chatId;
+                        this.log('Loaded chatId from storage:', this.chatId);
+                    }
+                    
+                    // Load messages if exists
+                    if (data.messages && Array.isArray(data.messages)) {
+                        this.messages = data.messages;
+                        this.restoreMessages();
+                    } else if (this.config.welcomeMessage) {
+                        this.addMessage(this.config.welcomeMessage, 'bot', false);
+                    }
                 } else {
                     this.messages = [];
                     if (this.config.welcomeMessage) {
@@ -605,7 +595,7 @@
                     }
                 }
             } catch (e) {
-                this.log('Error loading messages:', e);
+                this.log('Error loading from storage:', e);
                 this.messages = [];
                 if (this.config.welcomeMessage) {
                     this.addMessage(this.config.welcomeMessage, 'bot', false);
@@ -613,14 +603,18 @@
             }
         }
 
-        saveMessages() {
+        saveToStorage() {
             if (this.config.clearChatOnReload) return;
             
             try {
-                localStorage.setItem(this.storageKey, JSON.stringify(this.messages));
-                this.log('Messages saved:', this.messages.length);
+                const data = {
+                    chatId: this.chatId,
+                    messages: this.messages
+                };
+                localStorage.setItem(this.storageKey, JSON.stringify(data));
+                this.log('Saved to storage - chatId:', this.chatId, 'messages:', this.messages.length);
             } catch (e) {
-                this.log('Error saving messages:', e);
+                this.log('Error saving to storage:', e);
             }
         }
 
@@ -645,13 +639,9 @@
             if (confirm('Are you sure you want to clear the chat history?')) {
                 // Clear storage
                 localStorage.removeItem(this.storageKey);
-                localStorage.removeItem(this.chatIdKey);
                 
-                // Generate new chatId
-                this.chatId = this.generateChatId();
-                this.saveChatId();
-                
-                // Clear messages
+                // Reset state
+                this.chatId = null;
                 this.messages = [];
                 
                 // Clear UI
@@ -663,7 +653,7 @@
                     this.addMessage(this.config.welcomeMessage, 'bot', false);
                 }
                 
-                this.log('Chat reset. New Chat ID:', this.chatId);
+                this.log('Chat reset. ChatId cleared - will be assigned by Flowise on next message');
             }
         }
 
@@ -816,14 +806,20 @@
 
         async sendWithStreaming(message, botMessageId) {
             try {
+                const body = { 
+                    question: message, 
+                    streaming: true
+                };
+                
+                // Only send chatId if we have one
+                if (this.chatId) {
+                    body.chatId = this.chatId;
+                }
+                
                 const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        question: message, 
-                        streaming: true,
-                        chatId: this.chatId
-                    })
+                    body: JSON.stringify(body)
                 });
 
                 if (!response.ok) throw new Error('API failed');
@@ -831,15 +827,14 @@
                 const contentType = response.headers.get('content-type');
                 if (!contentType?.includes('text/event-stream')) {
                     const data = await response.json();
-                    // If API returns a different chatId, update it
+                    // Flowise returned chatId - save it!
                     if (data.chatId && data.chatId !== this.chatId) {
                         this.chatId = data.chatId;
-                        this.saveChatId();
-                        this.log('ChatId updated from API:', this.chatId);
+                        this.saveToStorage();
+                        this.log('✅ ChatId assigned by Flowise:', this.chatId);
                     }
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
-                    // Remove placeholder and add real message
                     this.addMessageToStorage(botMessage, 'bot');
                     return;
                 }
@@ -897,11 +892,11 @@
                             }
                         }
 
-                        // Update chatId if provided in metadata
+                        // Flowise returned chatId in metadata - save it!
                         if (metadata && metadata.chatId && metadata.chatId !== this.chatId) {
                             this.chatId = metadata.chatId;
-                            this.saveChatId();
-                            this.log('ChatId updated from metadata:', this.chatId);
+                            this.saveToStorage();
+                            this.log('✅ ChatId assigned by Flowise (metadata):', this.chatId);
                         }
 
                         if (token) {
@@ -925,23 +920,27 @@
         }
 
         async sendWithoutStreaming(message, botMessageId) {
+            const body = { question: message };
+            
+            // Only send chatId if we have one
+            if (this.chatId) {
+                body.chatId = this.chatId;
+            }
+            
             const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    question: message,
-                    chatId: this.chatId
-                })
+                body: JSON.stringify(body)
             });
 
             if (!response.ok) throw new Error('API failed');
             const data = await response.json();
             
-            // Update chatId if API returns a different one
+            // Flowise returned chatId - save it!
             if (data.chatId && data.chatId !== this.chatId) {
                 this.chatId = data.chatId;
-                this.saveChatId();
-                this.log('ChatId updated from API:', this.chatId);
+                this.saveToStorage();
+                this.log('✅ ChatId assigned by Flowise:', this.chatId);
             }
             
             const botMessage = data.text || data.answer || data.response || 'No response';
@@ -951,7 +950,7 @@
 
         addMessageToStorage(content, role) {
             this.messages.push({ role, content });
-            this.saveMessages();
+            this.saveToStorage();
         }
 
         createPlaceholderMessage() {
