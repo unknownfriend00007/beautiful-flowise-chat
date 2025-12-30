@@ -1,6 +1,6 @@
 /**
- * Beautiful Flowise Chat Widget v1.5.1
- * Buttery smooth streaming with proper memory retention
+ * Beautiful Flowise Chat Widget v1.6.0
+ * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
 
@@ -22,7 +22,8 @@
         enableStreaming: true,
         enableMarkdown: true,
         debug: false,
-        avatar: '🤖'
+        avatar: '🤖',
+        mode: 'popup' // 'popup' or 'fullscreen'
     };
 
     const styles = `
@@ -43,8 +44,27 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.bf-bottom-right { bottom: 20px; right: 20px; }
-.bf-bottom-left { bottom: 20px; left: 20px; }
+/* POPUP MODE */
+.bf-mode-popup {
+    bottom: 20px;
+    right: 20px;
+}
+
+.bf-mode-popup.bf-bottom-left { 
+    bottom: 20px; 
+    left: 20px;
+    right: auto;
+}
+
+/* FULLSCREEN MODE */
+.bf-mode-fullscreen {
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    bottom: auto;
+    right: auto;
+}
 
 .bf-chat-button {
     width: 60px;
@@ -60,24 +80,52 @@
     justify-content: center;
 }
 
+.bf-mode-fullscreen .bf-chat-button {
+    display: none !important;
+}
+
 .bf-chat-button:hover { transform: scale(1.1); }
 .bf-button-icon { width: 28px; height: 28px; color: white; stroke-width: 2; }
 
 .bf-chat-window {
     position: absolute;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+}
+
+/* Popup mode window */
+.bf-mode-popup .bf-chat-window {
     bottom: 80px;
     right: 0;
     width: 400px;
     max-width: calc(100vw - 40px);
     height: 600px;
     max-height: calc(100vh - 120px);
-    background: white;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    animation: slideUp 0.3s ease;
+}
+
+.bf-mode-popup.bf-bottom-left .bf-chat-window {
+    left: 0;
+    right: auto;
+}
+
+/* Fullscreen mode window */
+.bf-mode-fullscreen .bf-chat-window {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex !important;
+    animation: none;
 }
 
 @keyframes slideUp {
@@ -92,6 +140,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
 }
 
 .bf-header-content { display: flex; align-items: center; gap: 12px; }
@@ -119,6 +168,10 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 24px;
+}
+
+.bf-mode-fullscreen .bf-minimize-btn {
+    display: none;
 }
 
 .bf-messages {
@@ -244,7 +297,6 @@
 .bf-bot-message .bf-message-text h2 { font-size: 16px; }
 .bf-bot-message .bf-message-text h3 { font-size: 15px; }
 
-/* Loading dots - compact */
 .bf-loading-dots {
     display: flex;
     align-items: center;
@@ -287,49 +339,6 @@
     51%, 100% { opacity: 0; }
 }
 
-.bf-typing {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 20px 10px;
-}
-
-.bf-typing-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-}
-
-.bf-typing-dots {
-    background: white;
-    padding: 12px 16px;
-    border-radius: 16px;
-    display: flex;
-    gap: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.bf-typing-dots span {
-    width: 8px;
-    height: 8px;
-    background: #cbd5e1;
-    border-radius: 50%;
-    animation: typing 1.4s ease-in-out infinite;
-}
-
-.bf-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.bf-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typing {
-    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-    30% { transform: translateY(-10px); opacity: 1; }
-}
-
 .bf-input-container {
     padding: 16px;
     background: white;
@@ -337,6 +346,7 @@
     display: flex;
     gap: 10px;
     align-items: flex-end;
+    flex-shrink: 0;
 }
 
 .bf-input {
@@ -369,6 +379,7 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.2s;
+    flex-shrink: 0;
 }
 
 .bf-send-btn:hover { transform: scale(1.05); }
@@ -379,6 +390,7 @@
     text-align: center;
     background: #f9fafb;
     border-top: 1px solid #e5e7eb;
+    flex-shrink: 0;
 }
 
 .bf-branding {
@@ -392,7 +404,7 @@
     color: var(--bf-primary-color);
 }
 
-/* THEMES - Lighter user message colors */
+/* THEMES */
 .bf-theme-cloudflare { --bf-primary-color: #f38020; --bf-primary-dark: #d96b0f; }
 .bf-theme-cloudflare .bf-user-message .bf-message-text {
     background: rgba(243, 128, 32, 0.15);
@@ -456,7 +468,7 @@
             this.apiHost = config.apiHost;
             this.chatId = generateUUID();
             this.conversationHistory = [];
-            this.isOpen = false;
+            this.isOpen = this.config.mode === 'fullscreen';
             this.currentStreamingMessageId = null;
             this.init();
         }
@@ -466,6 +478,7 @@
             this.createWidget();
             this.attachEventListeners();
             this.log('Chat ID:', this.chatId);
+            this.log('Mode:', this.config.mode);
         }
 
         log(...args) {
@@ -483,8 +496,10 @@
         createWidget() {
             const container = document.createElement('div');
             container.id = 'beautiful-flowise-container';
-            container.className = `bf-container bf-${this.config.position} bf-theme-${this.config.theme}`;
+            container.className = `bf-container bf-mode-${this.config.mode} bf-${this.config.position} bf-theme-${this.config.theme}`;
             container.style.setProperty('--bf-primary-color', this.config.primaryColor);
+            
+            const chatWindowDisplay = this.config.mode === 'fullscreen' ? 'flex' : 'none';
             
             container.innerHTML = `
                 <button class="bf-chat-button" id="bf-toggle-button">
@@ -496,7 +511,7 @@
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
-                <div class="bf-chat-window" id="bf-chat-window" style="display: none;">
+                <div class="bf-chat-window" id="bf-chat-window" style="display: ${chatWindowDisplay};">
                     <div class="bf-header">
                         <div class="bf-header-content">
                             <div class="bf-avatar">${this.config.avatar}</div>
@@ -530,7 +545,12 @@
 
         attachEventListeners() {
             document.getElementById('bf-toggle-button').addEventListener('click', () => this.toggleChat());
-            document.getElementById('bf-minimize').addEventListener('click', () => this.toggleChat());
+            
+            const minimizeBtn = document.getElementById('bf-minimize');
+            if (minimizeBtn && this.config.mode === 'popup') {
+                minimizeBtn.addEventListener('click', () => this.toggleChat());
+            }
+            
             document.getElementById('bf-send').addEventListener('click', () => this.sendMessage());
             
             const input = document.getElementById('bf-input');
@@ -544,9 +564,15 @@
                 input.style.height = 'auto';
                 input.style.height = Math.min(input.scrollHeight, 120) + 'px';
             });
+            
+            if (this.config.mode === 'fullscreen') {
+                setTimeout(() => input.focus(), 100);
+            }
         }
 
         toggleChat() {
+            if (this.config.mode === 'fullscreen') return;
+            
             this.isOpen = !this.isOpen;
             const chatWindow = document.getElementById('bf-chat-window');
             const openIcon = document.querySelector('.bf-button-open');
@@ -833,12 +859,22 @@
     }
 
     window.BeautifulFlowiseChat = {
+        // Popup mode (default - bottom-right bubble)
         init: function(config) {
             if (!config.chatflowid || !config.apiHost) {
                 console.error('BeautifulFlowiseChat: chatflowid and apiHost are required');
                 return;
             }
-            return new BeautifulFlowiseChat(config);
+            return new BeautifulFlowiseChat({ ...config, mode: 'popup' });
+        },
+        
+        // Full-screen mode (fills entire viewport)
+        initFull: function(config) {
+            if (!config.chatflowid || !config.apiHost) {
+                console.error('BeautifulFlowiseChat: chatflowid and apiHost are required');
+                return;
+            }
+            return new BeautifulFlowiseChat({ ...config, mode: 'fullscreen' });
         }
     };
 })();
