@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.9.2
+ * Beautiful Flowise Chat Widget v1.9.3
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -250,13 +250,10 @@
 }
 
 .bf-message-text {
-    background: white;
     padding: 12px 16px !important;
     border-radius: 16px;
-    color: #1f2937;
     font-size: 14px;
     line-height: 1.6;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: keep-all;
@@ -267,6 +264,12 @@
     max-width: 100% !important;
     text-align: left !important;
     margin: 0 !important;
+}
+
+.bf-bot-message .bf-message-text {
+    background: rgba(99, 102, 241, 0.08);
+    color: #1f2937;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .bf-user-message .bf-message-text {
@@ -287,12 +290,12 @@
 .bf-bot-message .bf-message-text strong { font-weight: 600; color: #111827; }
 .bf-bot-message .bf-message-text em { font-style: italic; }
 .bf-bot-message .bf-message-text code {
-    background: #f3f4f6;
+    background: rgba(99, 102, 241, 0.15);
     padding: 3px 7px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
     font-size: 13px;
-    color: #be123c;
+    color: var(--bf-primary-dark);
 }
 .bf-bot-message .bf-message-text pre {
     background: #1f2937;
@@ -441,6 +444,13 @@
     --bf-primary-color: #f38020; 
     --bf-primary-dark: #d96b0f; 
 }
+.bf-theme-cloudflare .bf-bot-message .bf-message-text {
+    background: rgba(243, 128, 32, 0.08);
+}
+.bf-theme-cloudflare .bf-bot-message .bf-message-text code {
+    background: rgba(243, 128, 32, 0.15);
+    color: #d96b0f;
+}
 .bf-theme-cloudflare .bf-user-message .bf-message-text {
     background: linear-gradient(135deg, #f38020, #d96b0f) !important;
     color: #ffffff !important;
@@ -450,6 +460,13 @@
 .bf-theme-intercom { 
     --bf-primary-color: #1f8ded; 
     --bf-primary-dark: #1273c5; 
+}
+.bf-theme-intercom .bf-bot-message .bf-message-text {
+    background: rgba(31, 141, 237, 0.08);
+}
+.bf-theme-intercom .bf-bot-message .bf-message-text code {
+    background: rgba(31, 141, 237, 0.15);
+    color: #1273c5;
 }
 .bf-theme-intercom .bf-user-message .bf-message-text {
     background: linear-gradient(135deg, #1f8ded, #1273c5) !important;
@@ -461,6 +478,13 @@
     --bf-primary-color: #667eea; 
     --bf-primary-dark: #764ba2; 
 }
+.bf-theme-gradient .bf-bot-message .bf-message-text {
+    background: rgba(102, 126, 234, 0.08);
+}
+.bf-theme-gradient .bf-bot-message .bf-message-text code {
+    background: rgba(102, 126, 234, 0.15);
+    color: #764ba2;
+}
 .bf-theme-gradient .bf-user-message .bf-message-text {
     background: linear-gradient(135deg, #667eea, #764ba2) !important;
     color: #ffffff !important;
@@ -471,6 +495,13 @@
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.bf-theme-glassmorphism .bf-bot-message .bf-message-text {
+    background: rgba(99, 102, 241, 0.1);
+    backdrop-filter: blur(10px);
+}
+.bf-theme-glassmorphism .bf-bot-message .bf-message-text code {
+    background: rgba(99, 102, 241, 0.2);
 }
 .bf-theme-glassmorphism .bf-user-message .bf-message-text {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(79, 70, 229, 0.9)) !important;
@@ -485,10 +516,14 @@
 }
 .bf-theme-dark .bf-chat-window { background: #1f2937; }
 .bf-theme-dark .bf-messages { background: #111827; }
-.bf-theme-dark .bf-message-text { 
-    background: #374151 !important; 
+.bf-theme-dark .bf-bot-message .bf-message-text { 
+    background: rgba(99, 102, 241, 0.15) !important; 
     color: #f9fafb !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+}
+.bf-theme-dark .bf-bot-message .bf-message-text code {
+    background: rgba(99, 102, 241, 0.25);
+    color: #a5b4fc;
 }
 .bf-theme-dark .bf-user-message .bf-message-text {
     background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
@@ -517,6 +552,13 @@
 .bf-theme-minimal { 
     --bf-primary-color: #000000; 
     --bf-primary-dark: #1f2937; 
+}
+.bf-theme-minimal .bf-bot-message .bf-message-text {
+    background: rgba(0, 0, 0, 0.05);
+}
+.bf-theme-minimal .bf-bot-message .bf-message-text code {
+    background: rgba(0, 0, 0, 0.1);
+    color: #1f2937;
 }
 .bf-theme-minimal .bf-user-message .bf-message-text {
     background: linear-gradient(135deg, #000000, #1f2937) !important;
