@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.6.1
+ * Beautiful Flowise Chat Widget v1.6.2
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -238,6 +238,7 @@
     display: inline-block;
 }
 
+/* DEFAULT THEME - User message */
 .bf-container .bf-messages .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.15) !important;
     color: #1f2937 !important;
@@ -405,52 +406,97 @@
     color: var(--bf-primary-color);
 }
 
-/* THEMES */
-.bf-theme-cloudflare { --bf-primary-color: #f38020; --bf-primary-dark: #d96b0f; }
-.bf-theme-cloudflare .bf-container .bf-messages .bf-user-message .bf-message-text {
+/* ========== THEMES ========== */
+
+/* CLOUDFLARE THEME */
+.bf-theme-cloudflare { 
+    --bf-primary-color: #f38020; 
+    --bf-primary-dark: #d96b0f; 
+}
+.bf-theme-cloudflare .bf-user-message .bf-message-text {
     background: rgba(243, 128, 32, 0.15) !important;
     color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(243, 128, 32, 0.1) !important;
 }
 
-.bf-theme-intercom { --bf-primary-color: #1f8ded; --bf-primary-dark: #1273c5; }
-.bf-theme-intercom .bf-container .bf-messages .bf-user-message .bf-message-text {
+/* INTERCOM THEME */
+.bf-theme-intercom { 
+    --bf-primary-color: #1f8ded; 
+    --bf-primary-dark: #1273c5; 
+}
+.bf-theme-intercom .bf-user-message .bf-message-text {
     background: rgba(31, 141, 237, 0.15) !important;
     color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(31, 141, 237, 0.1) !important;
 }
 
-.bf-theme-gradient { --bf-primary-color: #667eea; --bf-primary-dark: #764ba2; }
-.bf-theme-gradient .bf-container .bf-messages .bf-user-message .bf-message-text {
+/* GRADIENT THEME */
+.bf-theme-gradient { 
+    --bf-primary-color: #667eea; 
+    --bf-primary-dark: #764ba2; 
+}
+.bf-theme-gradient .bf-user-message .bf-message-text {
     background: rgba(102, 126, 234, 0.15) !important;
     color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1) !important;
 }
 
+/* GLASSMORPHISM THEME */
 .bf-theme-glassmorphism .bf-chat-window {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
-.bf-theme-glassmorphism .bf-container .bf-messages .bf-user-message .bf-message-text {
+.bf-theme-glassmorphism .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.2) !important;
     color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15) !important;
 }
 
-.bf-theme-dark { --bf-primary-color: #6366f1; --bf-primary-dark: #4f46e5; }
+/* DARK THEME */
+.bf-theme-dark { 
+    --bf-primary-color: #6366f1; 
+    --bf-primary-dark: #4f46e5; 
+}
 .bf-theme-dark .bf-chat-window { background: #1f2937; }
 .bf-theme-dark .bf-messages { background: #111827; }
-.bf-theme-dark .bf-message-text { background: #374151; color: #f9fafb; }
-.bf-theme-dark .bf-container .bf-messages .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.25) !important;
-    color: #f9fafb !important;
+.bf-theme-dark .bf-message-text { 
+    background: #374151; 
+    color: #f9fafb; 
 }
-.bf-theme-dark .bf-input { background: #374151; color: #f9fafb; border-color: #4b5563; }
-.bf-theme-dark .bf-input-container { background: #1f2937; border-top-color: #374151; }
-.bf-theme-dark .bf-footer { background: #1f2937; border-top-color: #374151; }
+.bf-theme-dark .bf-user-message .bf-message-text {
+    background: rgba(99, 102, 241, 0.3) !important;
+    color: #f9fafb !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2) !important;
+}
+.bf-theme-dark .bf-input { 
+    background: #374151; 
+    color: #f9fafb; 
+    border-color: #4b5563; 
+}
+.bf-theme-dark .bf-input::placeholder {
+    color: #9ca3af;
+}
+.bf-theme-dark .bf-input-container { 
+    background: #1f2937; 
+    border-top-color: #374151; 
+}
+.bf-theme-dark .bf-footer { 
+    background: #1f2937; 
+    border-top-color: #374151; 
+}
 .bf-theme-dark .bf-branding { color: #9ca3af; }
+.bf-theme-dark .bf-message-time { color: #9ca3af; }
 
-.bf-theme-minimal { --bf-primary-color: #000000; --bf-primary-dark: #1f2937; }
-.bf-theme-minimal .bf-container .bf-messages .bf-user-message .bf-message-text {
+/* MINIMAL THEME */
+.bf-theme-minimal { 
+    --bf-primary-color: #000000; 
+    --bf-primary-dark: #1f2937; 
+}
+.bf-theme-minimal .bf-user-message .bf-message-text {
     background: rgba(0, 0, 0, 0.08) !important;
     color: #1f2937 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
 }
     `;
 
