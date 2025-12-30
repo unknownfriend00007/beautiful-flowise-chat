@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.9.1
+ * Beautiful Flowise Chat Widget v1.9.2
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -256,7 +256,7 @@
     color: #1f2937;
     font-size: 14px;
     line-height: 1.6;
-    box-shadow: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: keep-all;
@@ -270,9 +270,9 @@
 }
 
 .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.15) !important;
-    color: #1f2937 !important;
-    box-shadow: none !important;
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark)) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3) !important;
 }
 
 .bf-message-time {
@@ -442,9 +442,9 @@
     --bf-primary-dark: #d96b0f; 
 }
 .bf-theme-cloudflare .bf-user-message .bf-message-text {
-    background: rgba(243, 128, 32, 0.15) !important;
-    color: #1f2937 !important;
-    box-shadow: none !important;
+    background: linear-gradient(135deg, #f38020, #d96b0f) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 12px rgba(243, 128, 32, 0.3) !important;
 }
 
 .bf-theme-intercom { 
@@ -452,9 +452,9 @@
     --bf-primary-dark: #1273c5; 
 }
 .bf-theme-intercom .bf-user-message .bf-message-text {
-    background: rgba(31, 141, 237, 0.15) !important;
-    color: #1f2937 !important;
-    box-shadow: none !important;
+    background: linear-gradient(135deg, #1f8ded, #1273c5) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 12px rgba(31, 141, 237, 0.3) !important;
 }
 
 .bf-theme-gradient { 
@@ -462,9 +462,9 @@
     --bf-primary-dark: #764ba2; 
 }
 .bf-theme-gradient .bf-user-message .bf-message-text {
-    background: rgba(102, 126, 234, 0.2) !important;
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
     color: #ffffff !important;
-    box-shadow: none !important;
+    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.3) !important;
 }
 
 .bf-theme-glassmorphism .bf-chat-window {
@@ -473,9 +473,10 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 .bf-theme-glassmorphism .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.25) !important;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(79, 70, 229, 0.9)) !important;
     color: #ffffff !important;
-    box-shadow: none !important;
+    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.4) !important;
+    backdrop-filter: blur(10px);
 }
 
 .bf-theme-dark { 
@@ -487,12 +488,12 @@
 .bf-theme-dark .bf-message-text { 
     background: #374151 !important; 
     color: #f9fafb !important;
-    box-shadow: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
 }
 .bf-theme-dark .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.4) !important;
+    background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
     color: #ffffff !important;
-    box-shadow: none !important;
+    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.5) !important;
 }
 .bf-theme-dark .bf-input { 
     background: #374151; 
@@ -518,9 +519,9 @@
     --bf-primary-dark: #1f2937; 
 }
 .bf-theme-minimal .bf-user-message .bf-message-text {
-    background: rgba(0, 0, 0, 0.08) !important;
-    color: #1f2937 !important;
-    box-shadow: none !important;
+    background: linear-gradient(135deg, #000000, #1f2937) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
 }
     `;
 
@@ -698,7 +699,7 @@
                                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                                 </svg>
                             </button>
-                            <button class="bf-minimize-btn" id="bf-minimize">−</button>
+                            <button class="bf-minimize-btn" id="bf-minimize">\u2212</button>
                         </div>
                     </div>
                     <div class="bf-messages" id="bf-messages"></div>
@@ -821,7 +822,7 @@
                     if (data.chatId && data.chatId !== this.chatId) {
                         this.chatId = data.chatId;
                         this.saveToStorage();
-                        this.log('✅ ChatId assigned by Flowise:', this.chatId);
+                        this.log('\u2705 ChatId assigned by Flowise:', this.chatId);
                     }
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
@@ -886,7 +887,7 @@
                         if (metadata && metadata.chatId && metadata.chatId !== this.chatId) {
                             this.chatId = metadata.chatId;
                             this.saveToStorage();
-                            this.log('✅ ChatId assigned by Flowise (metadata):', this.chatId);
+                            this.log('\u2705 ChatId assigned by Flowise (metadata):', this.chatId);
                         }
 
                         if (token) {
@@ -930,7 +931,7 @@
             if (data.chatId && data.chatId !== this.chatId) {
                 this.chatId = data.chatId;
                 this.saveToStorage();
-                this.log('✅ ChatId assigned by Flowise:', this.chatId);
+                this.log('\u2705 ChatId assigned by Flowise:', this.chatId);
             }
             
             const botMessage = data.text || data.answer || data.response || 'No response';
