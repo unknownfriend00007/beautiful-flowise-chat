@@ -3,7 +3,7 @@
 > A modern, buttery-smooth chat widget for Flowise AI with **dual-mode support**, **perfect memory**, **smooth streaming**, **markdown support**, and **full customization**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CDN](https://img.shields.io/badge/CDN-jsDelivr-orange.svg)](https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js)
+[![CDN](https://img.shields.io/badge/CDN-jsDelivr-orange.svg)](https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js)
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/unknownfriend00007/beautiful-flowise-chat)
 [![Powered by RPS](https://img.shields.io/badge/Powered%20by-RPS-blueviolet.svg)](mailto:mail.rps.active@proton.me)
 
@@ -17,6 +17,7 @@
 - 💬 **User Message Colors** - Background AND text color
 - 🎨 **Chat Background** - Custom window background color
 - ✅ **Always Visible Text** - No more readability issues!
+- 🌈 **Flexible Color Formats** - Use hex (`#7c3aed`) or rgba (`rgba(124,58,237,0.15)`)!
 
 ---
 
@@ -24,13 +25,13 @@
 
 ### Latest CDN (v2.0.0)
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
 ```
 
 ### 🪟 Popup Mode (Bottom-Right Bubble)
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
 <script>
 BeautifulFlowiseChat.init({
     chatflowid: "your-chatflow-id",
@@ -42,7 +43,7 @@ BeautifulFlowiseChat.init({
 ### 📺 Full-Screen Mode (Fills Entire Page)
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
 <script>
 BeautifulFlowiseChat.initFull({
     chatflowid: "your-chatflow-id",
@@ -60,7 +61,7 @@ BeautifulFlowiseChat.initFull({
 The `custom` theme gives you **full control** over ALL colors:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
 <script>
 BeautifulFlowiseChat.initFull({
     chatflowid: "your-chatflow-id",
@@ -72,8 +73,8 @@ BeautifulFlowiseChat.initFull({
     // Define your brand color (header, buttons, accents)
     primaryColor: '#7c3aed',  // Your main color!
     
-    // Optional: Customize user message appearance
-    customUserMessageBg: 'rgba(124, 58, 237, 0.15)',  // Light tint of your color
+    // Optional: Customize user message appearance (hex or rgba both work!)
+    customUserMessageBg: '#c4b5fd',  // Light purple - HEX works!
     customUserMessageText: '#1f2937',  // Dark gray for visibility
     
     // Optional: Customize chat background
@@ -84,25 +85,41 @@ BeautifulFlowiseChat.initFull({
 </script>
 ```
 
+### 🌈 Color Format - Both Hex & RGBA Work!
+
+**YES! You can use simple hex colors like `#7c3aed`** - no need for rgba format!
+
+```javascript
+// ✅ HEX format works perfectly!
+customUserMessageBg: '#c4b5fd'
+
+// ✅ RGBA also works (for transparency)
+customUserMessageBg: 'rgba(196, 181, 253, 0.5)'
+
+// ✅ RGB works too
+customUserMessageBg: 'rgb(196, 181, 253)'
+```
+
 ### Custom Theme Options Explained
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `theme` | string | - | Set to `'custom'` to use custom theme |
-| `primaryColor` | string | `'#6366f1'` | **Header bar color** - Also used for buttons & accents |
-| `customUserMessageBg` | string | Auto (15% opacity of primary) | **User message background** - Can be any color/rgba |
-| `customUserMessageText` | string | `'#1f2937'` | **User message text color** - Ensures visibility |
-| `customChatBg` | string | `'#ffffff'` | **Chat window background** - Messages area, input, footer |
+| `primaryColor` | string | `'#6366f1'` | **Header bar color** - Also used for buttons & accents (hex/rgba/rgb) |
+| `customUserMessageBg` | string | Auto (15% opacity of primary) | **User message background** - Any format: hex, rgba, rgb |
+| `customUserMessageText` | string | `'#1f2937'` | **User message text color** - Ensures visibility (hex/rgba/rgb) |
+| `customChatBg` | string | `'#ffffff'` | **Chat window background** - Messages area, input, footer (hex/rgba/rgb) |
 
 ### Quick Examples
 
-#### Example 1: Purple Brand (Auto Background)
+#### Example 1: Purple Brand (Simple Hex Colors)
 ```javascript
 BeautifulFlowiseChat.initFull({
     chatflowid: "...",
-    apiHost: "...",
+    apiHost: "https://your-flowise-instance.com",
     theme: 'custom',
-    primaryColor: '#7c3aed'  // That's it! Auto-generates light tint
+    primaryColor: '#7c3aed',  // Purple - simple hex!
+    customUserMessageBg: '#c4b5fd'  // Light purple - hex works!
 });
 ```
 
@@ -110,25 +127,25 @@ BeautifulFlowiseChat.initFull({
 ```javascript
 BeautifulFlowiseChat.initFull({
     chatflowid: "...",
-    apiHost: "...",
+    apiHost: "https://your-flowise-instance.com",
     theme: 'custom',
-    primaryColor: '#ff6b35',                    // Orange header
-    customUserMessageBg: 'rgba(255, 107, 53, 0.2)',  // Light orange
-    customUserMessageText: '#1f2937',           // Dark text
-    customChatBg: '#f3f4f6'                     // Light gray background
+    primaryColor: '#ff6b35',       // Orange header (hex)
+    customUserMessageBg: '#ffccb3', // Light orange (hex)
+    customUserMessageText: '#1f2937',  // Dark text
+    customChatBg: '#f3f4f6'        // Light gray background
 });
 ```
 
-#### Example 3: Blue Corporate (White Text on User Messages)
+#### Example 3: Blue Corporate (Using RGBA for Transparency)
 ```javascript
 BeautifulFlowiseChat.initFull({
     chatflowid: "...",
-    apiHost: "...",
+    apiHost: "https://your-flowise-instance.com",
     theme: 'custom',
-    primaryColor: '#0066cc',                    // Corporate blue
-    customUserMessageBg: '#0066cc',             // Solid blue user messages
-    customUserMessageText: '#ffffff',           // White text for contrast
-    customChatBg: '#ffffff'                     // White background
+    primaryColor: '#0066cc',                 // Corporate blue (hex)
+    customUserMessageBg: 'rgba(0, 102, 204, 0.2)',  // Light blue with transparency
+    customUserMessageText: '#003d7a',        // Dark blue text
+    customChatBg: '#ffffff'                  // White background
 });
 ```
 
@@ -136,12 +153,12 @@ BeautifulFlowiseChat.initFull({
 ```javascript
 BeautifulFlowiseChat.initFull({
     chatflowid: "...",
-    apiHost: "...",
+    apiHost: "https://your-flowise-instance.com",
     theme: 'custom',
-    primaryColor: '#a78bfa',                    // Light purple for dark mode
-    customUserMessageBg: 'rgba(167, 139, 250, 0.25)',  // Light purple tint
-    customUserMessageText: '#e0e7ff',           // Very light purple text
-    customChatBg: '#1f2937'                     // Dark background
+    primaryColor: '#a78bfa',       // Light purple for dark mode
+    customUserMessageBg: '#4c1d95',  // Dark purple (hex)
+    customUserMessageText: '#e0e7ff',  // Very light purple text
+    customChatBg: '#1f2937'        // Dark background
 });
 ```
 
@@ -170,6 +187,7 @@ BeautifulFlowiseChat.initFull({
 ### 🎨 Custom Theme (NEW!)
 - **One Color, Everything Styled** - Set primary color and go!
 - **Full Customization** - Background, text, everything adjustable
+- **Hex & RGBA Support** - Use simple hex colors or rgba for transparency
 - **Auto-Generated Tints** - Smart light versions for messages
 - **Dark Mode Ready** - Works with any color scheme
 - **Always Readable** - Configurable text colors
@@ -232,11 +250,11 @@ BeautifulFlowiseChat.initFull({
 <body>
     <h1>Welcome to my site!</h1>
     
-    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
     <script>
     BeautifulFlowiseChat.init({
-        chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
-        apiHost: "https://ruvatron-flowhybrid-3.hf.space",
+        chatflowid: "your-chatflow-id",
+        apiHost: "https://your-flowise-instance.com",
         theme: "gradient"
     });
     </script>
@@ -254,17 +272,18 @@ BeautifulFlowiseChat.initFull({
 </head>
 <body style="margin: 0; padding: 0;">
     
-    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
     <script>
     BeautifulFlowiseChat.initFull({
-        chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
-        apiHost: "https://ruvatron-flowhybrid-3.hf.space",
+        chatflowid: "your-chatflow-id",
+        apiHost: "https://your-flowise-instance.com",
         title: "AI Assistant",
         
-        // Use custom theme with your brand color
+        // Use custom theme with simple hex colors!
         theme: "custom",
-        primaryColor: "#10b981",  // Green brand color
-        customUserMessageText: "#064e3b"  // Dark green for visibility
+        primaryColor: "#10b981",       // Green brand color
+        customUserMessageBg: "#86efac", // Light green (hex works!)
+        customUserMessageText: "#064e3b" // Dark green for visibility
     });
     </script>
 </body>
@@ -274,7 +293,7 @@ BeautifulFlowiseChat.initFull({
 ### Example 3: With All Options
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
 <script>
 BeautifulFlowiseChat.init({
     // Required
@@ -289,8 +308,8 @@ BeautifulFlowiseChat.init({
     theme: "custom",           // Use custom theme for full control
     primaryColor: "#667eea",   // Your brand color
     
-    // Custom theme colors (optional)
-    customUserMessageBg: "rgba(102, 126, 234, 0.15)",
+    // Custom theme colors (optional) - HEX or RGBA both work!
+    customUserMessageBg: "#bfdbfe",  // Light blue (hex)
     customUserMessageText: "#1f2937",
     customChatBg: "#ffffff",
     
@@ -338,7 +357,7 @@ theme: "dark"
 // Minimal - Clean B&W
 theme: "minimal"
 
-// Custom - YOUR colors!
+// Custom - YOUR colors! (hex or rgba)
 theme: "custom"
 primaryColor: "#your-color"
 ```
@@ -348,7 +367,7 @@ primaryColor: "#your-color"
 ```javascript
 BeautifulFlowiseChat.init({
     chatflowid: "...",
-    apiHost: "...",
+    apiHost: "https://your-flowise-instance.com",
     theme: "modern",
     primaryColor: "#ff6b6b"  // Your brand color!
 });
@@ -404,10 +423,10 @@ BeautifulFlowiseChat.init({
 | `chatflowid` | string | **required** | Your Flowise chatflow ID |
 | `apiHost` | string | **required** | Your Flowise instance URL |
 | `theme` | string | `"modern"` | Theme name (use `"custom"` for full control) |
-| `primaryColor` | string | `"#6366f1"` | Main color (header, buttons, accents) |
-| `customUserMessageBg` | string | Auto (15% primary) | User message background color |
-| `customUserMessageText` | string | `"#1f2937"` | User message text color |
-| `customChatBg` | string | `"#ffffff"` | Chat window background color |
+| `primaryColor` | string | `"#6366f1"` | Main color - hex/rgba/rgb formats supported |
+| `customUserMessageBg` | string | Auto (15% primary) | User message background - hex/rgba/rgb |
+| `customUserMessageText` | string | `"#1f2937"` | User message text color - hex/rgba/rgb |
+| `customChatBg` | string | `"#ffffff"` | Chat window background - hex/rgba/rgb |
 | `position` | string | `"bottom-right"` | `"bottom-right"` or `"bottom-left"` (popup only) |
 | `enableStreaming` | boolean | `true` | Enable real-time streaming |
 | `enableMarkdown` | boolean | `true` | Format AI responses |
@@ -459,7 +478,7 @@ const chat2 = BeautifulFlowiseChat.initFull(config);
 ### Custom Theme Colors Not Applying?
 
 1. ✅ Make sure you set `theme: "custom"` (not "modern" etc.)
-2. ✅ Use valid color formats: hex (`#ff0000`) or rgba (`rgba(255,0,0,0.5)`)
+2. ✅ Use valid color formats: hex (`#ff0000`), rgb (`rgb(255,0,0)`), or rgba (`rgba(255,0,0,0.5)`)
 3. ✅ Clear browser cache with `Ctrl + Shift + R`
 4. ✅ Check console for errors with `debug: true`
 
@@ -483,7 +502,7 @@ const chat2 = BeautifulFlowiseChat.initFull(config);
 | **Loading Animation** | ✅ Pulsing dots | ❌ None |
 | **Markdown** | ✅ Full support | ⚠️ Limited |
 | **Themes** | ✅ 8 professional | ❌ 1 basic |
-| **Custom Colors** | ✅ Full control | ⚠️ Limited |
+| **Custom Colors** | ✅ Hex & RGBA | ⚠️ Limited |
 | **Mobile** | ✅ Optimized | ⚠️ Basic |
 | **Code Highlighting** | ✅ Yes | ❌ No |
 | **Clean Design** | ✅ Modern | ⚠️ Basic |
@@ -495,7 +514,7 @@ const chat2 = BeautifulFlowiseChat.initFull(config);
 
 ### Latest (v2.0.0) - Recommended
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
 ```
 
 ### Always Latest (auto-updates)
@@ -507,18 +526,8 @@ const chat2 = BeautifulFlowiseChat.initFull(config);
 ### Purge CDN Cache
 If you're seeing an old version, purge the cache:
 ```
-https://purge.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@9a5195d/dist/chat.js
+https://purge.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js
 ```
-
----
-
-## 🧪 Live Demos
-
-### Popup Demo
-👉 [**View Popup Demo**](https://htmlpreview.github.io/?https://github.com/unknownfriend00007/beautiful-flowise-chat/blob/main/examples/popup-demo.html)
-
-### Full-Screen Demo  
-👉 [**View Full-Screen Demo**](https://htmlpreview.github.io/?https://github.com/unknownfriend00007/beautiful-flowise-chat/blob/main/examples/fullscreen-demo.html)
 
 ---
 
@@ -537,7 +546,8 @@ Contributions welcome! Please:
 
 ### v2.0.0 (Latest) - 2025-12-30
 - 🎨 **Custom Theme Enhanced** - Full color customization
-- 🖌️ `customUserMessageBg` - User message background color
+- 🌈 **Hex & RGBA Support** - Use simple hex or rgba colors
+- 🖌️ `customUserMessageBg` - User message background color (hex/rgba)
 - ✍️ `customUserMessageText` - User message text color (visibility!)
 - 🎨 `customChatBg` - Chat window background color
 - 🤖 Auto-generates light tint if colors not specified
@@ -598,8 +608,6 @@ Copyright (c) 2025 RPS
 
 - 📧 [Contact RPS](mailto:mail.rps.active@proton.me)
 - 🐙 [GitHub Repository](https://github.com/unknownfriend00007/beautiful-flowise-chat)
-- 🧪 [Popup Demo](https://htmlpreview.github.io/?https://github.com/unknownfriend00007/beautiful-flowise-chat/blob/main/examples/popup-demo.html)
-- 📺 [Full-Screen Demo](https://htmlpreview.github.io/?https://github.com/unknownfriend00007/beautiful-flowise-chat/blob/main/examples/fullscreen-demo.html)
 - 🐛 [Report Issues](https://github.com/unknownfriend00007/beautiful-flowise-chat/issues)
 - 💡 [Request Features](https://github.com/unknownfriend00007/beautiful-flowise-chat/issues/new)
 
@@ -613,6 +621,7 @@ Copyright (c) 2025 RPS
 - 💬 Real-world production requirements
 - 🧠 Proper Flowise API implementation
 - 🖌️ Full customization capabilities
+- 🌈 Flexible color format support (hex & rgba)
 
 ---
 
