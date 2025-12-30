@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.6.3
+ * Beautiful Flowise Chat Widget v1.6.4
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -199,12 +199,12 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* STRONGER SPECIFICITY FOR USER MESSAGES */
-.bf-container .bf-messages .bf-message.bf-bot-message { 
+/* CRITICAL: MESSAGE ALIGNMENT */
+.bf-message.bf-bot-message { 
     justify-content: flex-start !important;
 }
 
-.bf-container .bf-messages .bf-message.bf-user-message { 
+.bf-message.bf-user-message { 
     justify-content: flex-end !important;
 }
 
@@ -214,11 +214,11 @@
     max-width: 75%;
 }
 
-.bf-container .bf-messages .bf-bot-message .bf-message-content {
+.bf-bot-message .bf-message-content {
     align-items: flex-start !important;
 }
 
-.bf-container .bf-messages .bf-user-message .bf-message-content {
+.bf-user-message .bf-message-content {
     align-items: flex-end !important;
 }
 
@@ -238,8 +238,8 @@
     display: inline-block;
 }
 
-/* DEFAULT THEME - User message */
-.bf-container .bf-messages .bf-user-message .bf-message-text {
+/* DEFAULT THEME - User message with DARK TEXT */
+.bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.15) !important;
     color: #1f2937 !important;
     box-shadow: 0 2px 8px rgba(99,102,241,0.1) !important;
@@ -413,7 +413,7 @@
     --bf-primary-color: #f38020; 
     --bf-primary-dark: #d96b0f; 
 }
-.bf-theme-cloudflare.bf-container .bf-messages .bf-user-message .bf-message-text {
+.bf-theme-cloudflare .bf-user-message .bf-message-text {
     background: rgba(243, 128, 32, 0.15) !important;
     color: #1f2937 !important;
     box-shadow: 0 2px 8px rgba(243, 128, 32, 0.1) !important;
@@ -424,7 +424,7 @@
     --bf-primary-color: #1f8ded; 
     --bf-primary-dark: #1273c5; 
 }
-.bf-theme-intercom.bf-container .bf-messages .bf-user-message .bf-message-text {
+.bf-theme-intercom .bf-user-message .bf-message-text {
     background: rgba(31, 141, 237, 0.15) !important;
     color: #1f2937 !important;
     box-shadow: 0 2px 8px rgba(31, 141, 237, 0.1) !important;
@@ -435,10 +435,10 @@
     --bf-primary-color: #667eea; 
     --bf-primary-dark: #764ba2; 
 }
-.bf-theme-gradient.bf-container .bf-messages .bf-user-message .bf-message-text {
-    background: rgba(102, 126, 234, 0.15) !important;
-    color: #1f2937 !important;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1) !important;
+.bf-theme-gradient .bf-user-message .bf-message-text {
+    background: rgba(102, 126, 234, 0.2) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15) !important;
 }
 
 /* GLASSMORPHISM THEME */
@@ -447,13 +447,13 @@
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
-.bf-theme-glassmorphism.bf-container .bf-messages .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.2) !important;
-    color: #1f2937 !important;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15) !important;
+.bf-theme-glassmorphism .bf-user-message .bf-message-text {
+    background: rgba(99, 102, 241, 0.25) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2) !important;
 }
 
-/* DARK THEME - NUCLEAR FIX */
+/* DARK THEME - WHITE TEXT ALWAYS */
 .bf-theme-dark { 
     --bf-primary-color: #6366f1; 
     --bf-primary-dark: #4f46e5; 
@@ -464,11 +464,11 @@
     background: #374151; 
     color: #f9fafb; 
 }
-/* MAXIMUM SPECIFICITY FOR DARK THEME USER MESSAGES */
-.bf-theme-dark.bf-container .bf-messages .bf-message.bf-user-message .bf-message-content .bf-message-text {
-    background: rgba(99, 102, 241, 0.35) !important;
+/* CRITICAL: Dark theme user messages need WHITE text */
+.bf-theme-dark .bf-user-message .bf-message-text {
+    background: rgba(99, 102, 241, 0.4) !important;
     color: #ffffff !important;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25) !important;
+    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3) !important;
 }
 .bf-theme-dark .bf-input { 
     background: #374151; 
@@ -494,7 +494,7 @@
     --bf-primary-color: #000000; 
     --bf-primary-dark: #1f2937; 
 }
-.bf-theme-minimal.bf-container .bf-messages .bf-user-message .bf-message-text {
+.bf-theme-minimal .bf-user-message .bf-message-text {
     background: rgba(0, 0, 0, 0.08) !important;
     color: #1f2937 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
