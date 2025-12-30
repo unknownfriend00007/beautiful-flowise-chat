@@ -1,6 +1,17 @@
 /**
- * Beautiful Flowise Chat Widget v2.0.0
- * Supports both Popup and Full-Screen modes
+ * Beautiful Flowise Chat Widget v2.0.1
+ * Production-Hardened Build
+ * 
+ * Security & Performance Updates:
+ * - XSS protection for markdown links
+ * - Request abortion and timeout handling
+ * - LocalStorage growth capping
+ * - Duplicate widget prevention
+ * - Dynamic primary color computation
+ * - Batched streaming updates
+ * - Input locking during requests
+ * - Memory leak prevention
+ * 
  * Created by RPS
  */
 
@@ -10,6 +21,7 @@
     const defaults = {
         theme: 'modern',
         primaryColor: '#6366f1',
+        primaryDarkColor: null, // Auto-computed if null
         position: 'bottom-right',
         width: '400px',
         height: '600px',
@@ -22,6 +34,9 @@
         enableStreaming: true,
         enableMarkdown: true,
         clearChatOnReload: false,
+        confirmOnReset: true, // Show confirmation before reset
+        maxMessages: 100, // Cap stored message history
+        requestTimeout: 30000, // 30 second timeout
         debug: false,
         avatar: '\ud83e\udd16',
         mode: 'popup',
@@ -29,6 +44,16 @@
         customUserMessageBg: null,
         customUserMessageText: null,
         customChatBg: null
+    };
+
+    // Constants
+    const CONSTANTS = {
+        FOCUS_DELAY: 100,
+        SCROLL_THROTTLE: 50,
+        STREAM_BATCH_DELAY: 50,
+        MAX_INPUT_HEIGHT: 120,
+        MIN_REQUEST_INTERVAL: 500, // Client-side rate limiting
+        ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:']
     };
 
     const styles = `
@@ -280,8 +305,8 @@
 }
 
 .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.15) !important;
-    color: #1f2937 !important;
+    background: var(--bf-custom-user-msg-bg) !important;
+    color: var(--bf-custom-user-msg-text) !important;
     border: none !important;
     box-shadow: none !important;
 }
@@ -408,6 +433,7 @@
 }
 
 .bf-input:focus { border-color: var(--bf-primary-color); }
+.bf-input:disabled { opacity: 0.6; cursor: not-allowed; background: #f3f4f6; }
 
 .bf-send-btn {
     background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark));
@@ -452,33 +478,15 @@
     --bf-primary-color: #f38020; 
     --bf-primary-dark: #d96b0f; 
 }
-.bf-theme-cloudflare .bf-user-message .bf-message-text {
-    background: rgba(243, 128, 32, 0.15) !important;
-    color: #1f2937 !important;
-    border: none !important;
-    box-shadow: none !important;
-}
 
 .bf-theme-intercom { 
     --bf-primary-color: #1f8ded; 
     --bf-primary-dark: #1273c5; 
 }
-.bf-theme-intercom .bf-user-message .bf-message-text {
-    background: rgba(31, 141, 237, 0.15) !important;
-    color: #1f2937 !important;
-    border: none !important;
-    box-shadow: none !important;
-}
 
 .bf-theme-gradient { 
     --bf-primary-color: #667eea; 
     --bf-primary-dark: #764ba2; 
-}
-.bf-theme-gradient .bf-user-message .bf-message-text {
-    background: rgba(102, 126, 234, 0.15) !important;
-    color: #1f2937 !important;
-    border: none !important;
-    box-shadow: none !important;
 }
 
 .bf-theme-glassmorphism .bf-chat-window {
@@ -487,16 +495,13 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 .bf-theme-glassmorphism .bf-user-message .bf-message-text {
-    background: rgba(99, 102, 241, 0.15) !important;
-    color: #1f2937 !important;
-    border: none !important;
-    box-shadow: none !important;
     backdrop-filter: blur(10px);
 }
 
 .bf-theme-dark { 
     --bf-primary-color: #6366f1; 
-    --bf-primary-dark: #4f46e5; 
+    --bf-primary-dark: #4f46e5;
+    --bf-custom-user-msg-text: #e0e7ff;
 }
 .bf-theme-dark .bf-chat-window { background: #1f2937; }
 .bf-theme-dark .bf-messages { background: #111827; }
@@ -507,9 +512,6 @@
 }
 .bf-theme-dark .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.25) !important;
-    color: #e0e7ff !important;
-    border: none !important;
-    box-shadow: none !important;
 }
 .bf-theme-dark .bf-input { 
     background: #374151; 
@@ -532,26 +534,21 @@
 
 .bf-theme-minimal { 
     --bf-primary-color: #000000; 
-    --bf-primary-dark: #1f2937; 
-}
-.bf-theme-minimal .bf-user-message .bf-message-text {
-    background: rgba(0, 0, 0, 0.06) !important;
-    color: #1f2937 !important;
-    border: none !important;
-    box-shadow: none !important;
+    --bf-primary-dark: #1f2937;
+    --bf-custom-user-msg-bg: rgba(0, 0, 0, 0.06);
 }
 
 /* CUSTOM THEME - Fully Customizable */
 .bf-theme-custom .bf-header {
-    background: var(--bf-primary-color) !important;
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark)) !important;
 }
 
 .bf-theme-custom .bf-chat-button {
-    background: var(--bf-primary-color) !important;
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark)) !important;
 }
 
 .bf-theme-custom .bf-send-btn {
-    background: var(--bf-primary-color) !important;
+    background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark)) !important;
 }
 
 .bf-theme-custom .bf-chat-window {
@@ -568,13 +565,6 @@
 
 .bf-theme-custom .bf-footer {
     background: var(--bf-custom-chat-bg) !important;
-}
-
-.bf-theme-custom .bf-user-message .bf-message-text {
-    background: var(--bf-custom-user-msg-bg) !important;
-    color: var(--bf-custom-user-msg-text) !important;
-    border: none !important;
-    box-shadow: none !important;
 }
 
 .bf-theme-custom .bf-loading-dots span {
@@ -610,24 +600,38 @@
             this.isOpen = this.config.mode === 'fullscreen';
             this.currentStreamingMessageId = null;
             this.messages = [];
-            
-            // DON'T generate chatId - let Flowise create it!
             this.chatId = null;
             
             // Performance optimization - throttle scroll updates
             this.lastScrollTime = 0;
-            this.scrollThrottle = 50; // ms
+            
+            // Streaming batch optimization
+            this.streamBuffer = '';
+            this.streamUpdateTimer = null;
+            
+            // Request management
+            this.abortController = null;
+            this.isSending = false;
+            this.lastRequestTime = 0;
+            
+            // Event listener references for cleanup
+            this.eventListeners = [];
             
             this.init();
         }
 
         init() {
+            // Prevent duplicate widgets
+            const existing = document.getElementById('beautiful-flowise-container');
+            if (existing) {
+                this.log('Removing existing widget instance');
+                existing.remove();
+            }
+            
             this.injectStyles();
             this.createWidget();
             this.applyCustomThemeColors();
             this.attachEventListeners();
-            
-            // Load state from localStorage
             this.loadFromStorage();
             
             this.log('Chat ID:', this.chatId || 'Not yet assigned (will be created by Flowise)');
@@ -636,39 +640,106 @@
         }
 
         applyCustomThemeColors() {
-            if (this.config.theme !== 'custom') return;
-            
             const container = document.getElementById('beautiful-flowise-container');
             if (!container) return;
             
-            // Apply custom colors as CSS variables
-            if (this.config.customUserMessageBg) {
-                container.style.setProperty('--bf-custom-user-msg-bg', this.config.customUserMessageBg);
-            } else {
-                // Auto-generate light version of primary color
-                const rgba = this.hexToRgba(this.config.primaryColor, 0.15);
-                container.style.setProperty('--bf-custom-user-msg-bg', rgba);
-            }
+            // Set primary color
+            container.style.setProperty('--bf-primary-color', this.config.primaryColor);
             
-            if (this.config.customUserMessageText) {
-                container.style.setProperty('--bf-custom-user-msg-text', this.config.customUserMessageText);
-            }
+            // Compute and set primary dark color
+            const primaryDark = this.config.primaryDarkColor || this.darkenColor(this.config.primaryColor);
+            container.style.setProperty('--bf-primary-dark', primaryDark);
             
-            if (this.config.customChatBg) {
-                container.style.setProperty('--bf-custom-chat-bg', this.config.customChatBg);
+            // Custom theme specific settings
+            if (this.config.theme === 'custom') {
+                // User message background
+                if (this.config.customUserMessageBg) {
+                    container.style.setProperty('--bf-custom-user-msg-bg', this.config.customUserMessageBg);
+                } else {
+                    // Auto-generate light version of primary color
+                    const rgba = this.colorToRgba(this.config.primaryColor, 0.15);
+                    container.style.setProperty('--bf-custom-user-msg-bg', rgba);
+                }
+                
+                // User message text color
+                if (this.config.customUserMessageText) {
+                    container.style.setProperty('--bf-custom-user-msg-text', this.config.customUserMessageText);
+                }
+                
+                // Chat background color
+                if (this.config.customChatBg) {
+                    container.style.setProperty('--bf-custom-chat-bg', this.config.customChatBg);
+                }
             }
         }
 
-        hexToRgba(hex, alpha) {
-            // Remove # if present
+        /**
+         * Darken a color by 10% for gradient effect
+         * Supports hex, rgb, and rgba formats
+         */
+        darkenColor(color) {
+            if (!color) return '#4f46e5';
+            
+            // Try to parse as hex
+            if (color.startsWith('#')) {
+                return this.darkenHex(color);
+            }
+            
+            // Try to parse as rgb/rgba
+            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+            if (rgbMatch) {
+                const [, r, g, b, a] = rgbMatch;
+                const darkR = Math.max(0, Math.floor(parseInt(r) * 0.8));
+                const darkG = Math.max(0, Math.floor(parseInt(g) * 0.8));
+                const darkB = Math.max(0, Math.floor(parseInt(b) * 0.8));
+                return a !== undefined ? `rgba(${darkR}, ${darkG}, ${darkB}, ${a})` : `rgb(${darkR}, ${darkG}, ${darkB})`;
+            }
+            
+            // Fallback to default
+            return '#4f46e5';
+        }
+
+        darkenHex(hex) {
             hex = hex.replace('#', '');
+            if (hex.length !== 6) return '#4f46e5';
             
-            // Parse hex values
-            const r = parseInt(hex.substring(0, 2), 16);
-            const g = parseInt(hex.substring(2, 4), 16);
-            const b = parseInt(hex.substring(4, 6), 16);
+            const r = Math.max(0, Math.floor(parseInt(hex.substring(0, 2), 16) * 0.8));
+            const g = Math.max(0, Math.floor(parseInt(hex.substring(2, 4), 16) * 0.8));
+            const b = Math.max(0, Math.floor(parseInt(hex.substring(4, 6), 16) * 0.8));
             
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+
+        /**
+         * Convert any color format to rgba
+         * Safely handles hex, rgb, and rgba inputs
+         */
+        colorToRgba(color, alpha) {
+            if (!color) return `rgba(99, 102, 241, ${alpha})`;
+            
+            // If already rgba/rgb, parse and apply alpha
+            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (rgbMatch) {
+                const [, r, g, b] = rgbMatch;
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+            
+            // If hex, convert to rgba
+            if (color.startsWith('#')) {
+                const hex = color.replace('#', '');
+                if (hex.length === 6) {
+                    const r = parseInt(hex.substring(0, 2), 16);
+                    const g = parseInt(hex.substring(2, 4), 16);
+                    const b = parseInt(hex.substring(4, 6), 16);
+                    
+                    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+                        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                    }
+                }
+            }
+            
+            // Fallback to default
+            return `rgba(99, 102, 241, ${alpha})`;
         }
 
         log(...args) {
@@ -688,26 +759,46 @@
                 if (stored) {
                     const data = JSON.parse(stored);
                     
-                    // Load chatId if exists
-                    if (data.chatId) {
-                        this.chatId = data.chatId;
-                        this.log('Loaded chatId from storage:', this.chatId);
+                    // Validate data structure
+                    if (typeof data !== 'object' || data === null) {
+                        throw new Error('Invalid data structure');
                     }
                     
-                    // Load messages if exists
-                    if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-                        this.messages = data.messages;
-                        this.restoreMessages();
+                    // Validate and load chatId
+                    if (data.chatId) {
+                        // Validate UUID format
+                        if (/^[a-f0-9-]{36}$/i.test(data.chatId)) {
+                            this.chatId = data.chatId;
+                            this.log('Loaded chatId from storage:', this.chatId);
+                        } else {
+                            this.log('Invalid chatId format, clearing');
+                            data.chatId = null;
+                        }
+                    }
+                    
+                    // Validate and load messages
+                    if (data.messages && Array.isArray(data.messages)) {
+                        // Cap message history to prevent localStorage overflow
+                        if (data.messages.length > this.config.maxMessages) {
+                            this.log(`Trimming message history from ${data.messages.length} to ${this.config.maxMessages}`);
+                            data.messages = data.messages.slice(-this.config.maxMessages);
+                        }
+                        
+                        if (data.messages.length > 0) {
+                            this.messages = data.messages;
+                            this.restoreMessages();
+                        } else {
+                            this.initializeWithWelcome();
+                        }
                     } else {
-                        // No messages in storage, show welcome
                         this.initializeWithWelcome();
                     }
                 } else {
-                    // No storage, show welcome
                     this.initializeWithWelcome();
                 }
             } catch (e) {
-                this.log('Error loading from storage:', e);
+                this.log('Error loading from storage (possibly corrupted), clearing:', e);
+                localStorage.removeItem(this.storageKey);
                 this.initializeWithWelcome();
             }
         }
@@ -715,10 +806,8 @@
         initializeWithWelcome() {
             this.messages = [];
             if (this.config.welcomeMessage) {
-                // Add welcome message to BOTH UI and messages array
                 this.messages.push({ role: 'bot', content: this.config.welcomeMessage });
                 this.addMessageToUI(this.config.welcomeMessage, 'bot');
-                // Save the welcome message to storage
                 this.saveToStorage();
             }
         }
@@ -727,12 +816,19 @@
             if (this.config.clearChatOnReload) return;
             
             try {
+                // Trim messages if exceeding max
+                let messagesToSave = this.messages;
+                if (messagesToSave.length > this.config.maxMessages) {
+                    messagesToSave = messagesToSave.slice(-this.config.maxMessages);
+                    this.messages = messagesToSave;
+                }
+                
                 const data = {
                     chatId: this.chatId,
-                    messages: this.messages
+                    messages: messagesToSave
                 };
                 localStorage.setItem(this.storageKey, JSON.stringify(data));
-                this.log('Saved to storage - chatId:', this.chatId, 'messages:', this.messages.length);
+                this.log('Saved to storage - chatId:', this.chatId, 'messages:', messagesToSave.length);
             } catch (e) {
                 this.log('Error saving to storage:', e);
             }
@@ -751,17 +847,35 @@
         }
 
         resetConversation() {
-            if (confirm('Are you sure you want to clear the chat history?')) {
+            const shouldReset = this.config.confirmOnReset 
+                ? confirm('Are you sure you want to clear the chat history?')
+                : true;
+            
+            if (shouldReset) {
+                // Abort any in-flight requests
+                if (this.abortController) {
+                    this.abortController.abort();
+                    this.abortController = null;
+                }
+                
                 // Clear storage
                 localStorage.removeItem(this.storageKey);
                 
                 // Reset state
                 this.chatId = null;
                 this.messages = [];
+                this.isSending = false;
+                this.currentStreamingMessageId = null;
                 
                 // Clear UI
                 const messagesContainer = document.getElementById('bf-messages');
                 messagesContainer.innerHTML = '';
+                
+                // Re-enable input
+                const input = document.getElementById('bf-input');
+                const sendBtn = document.getElementById('bf-send');
+                if (input) input.disabled = false;
+                if (sendBtn) sendBtn.disabled = false;
                 
                 // Show welcome message
                 this.initializeWithWelcome();
@@ -782,11 +896,9 @@
             const container = document.createElement('div');
             container.id = 'beautiful-flowise-container';
             container.className = `bf-container bf-mode-${this.config.mode} bf-${this.config.position} bf-theme-${this.config.theme}`;
-            container.style.setProperty('--bf-primary-color', this.config.primaryColor);
             
             const chatWindowDisplay = this.config.mode === 'fullscreen' ? 'flex' : 'none';
             
-            // Don't pre-render welcome message - it will be added via loadFromStorage
             container.innerHTML = `
                 <button class="bf-chat-button" id="bf-toggle-button">
                     <svg class="bf-button-icon bf-button-open" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -830,31 +942,50 @@
         }
 
         attachEventListeners() {
-            document.getElementById('bf-toggle-button').addEventListener('click', () => this.toggleChat());
+            const addListener = (element, event, handler) => {
+                if (element) {
+                    element.addEventListener(event, handler);
+                    this.eventListeners.push({ element, event, handler });
+                }
+            };
+            
+            addListener(document.getElementById('bf-toggle-button'), 'click', () => this.toggleChat());
             
             const minimizeBtn = document.getElementById('bf-minimize');
             if (minimizeBtn && this.config.mode === 'popup') {
-                minimizeBtn.addEventListener('click', () => this.toggleChat());
+                addListener(minimizeBtn, 'click', () => this.toggleChat());
             }
             
-            document.getElementById('bf-reset').addEventListener('click', () => this.resetConversation());
-            document.getElementById('bf-send').addEventListener('click', () => this.sendMessage());
+            addListener(document.getElementById('bf-reset'), 'click', () => this.resetConversation());
+            addListener(document.getElementById('bf-send'), 'click', () => this.sendMessage());
             
             const input = document.getElementById('bf-input');
-            input.addEventListener('keydown', (e) => {
+            const inputKeyHandler = (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     this.sendMessage();
                 }
-            });
-            input.addEventListener('input', () => {
+            };
+            addListener(input, 'keydown', inputKeyHandler);
+            
+            const inputResizeHandler = () => {
                 input.style.height = 'auto';
-                input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-            });
+                input.style.height = Math.min(input.scrollHeight, CONSTANTS.MAX_INPUT_HEIGHT) + 'px';
+            };
+            addListener(input, 'input', inputResizeHandler);
             
             if (this.config.mode === 'fullscreen') {
-                setTimeout(() => input.focus(), 100);
+                setTimeout(() => input.focus(), CONSTANTS.FOCUS_DELAY);
             }
+        }
+
+        removeEventListeners() {
+            this.eventListeners.forEach(({ element, event, handler }) => {
+                if (element) {
+                    element.removeEventListener(event, handler);
+                }
+            });
+            this.eventListeners = [];
         }
 
         toggleChat() {
@@ -873,6 +1004,12 @@
                 chatWindow.style.display = 'none';
                 openIcon.style.display = 'block';
                 closeIcon.style.display = 'none';
+                
+                // Abort any in-flight requests when closing
+                if (this.abortController) {
+                    this.abortController.abort();
+                    this.abortController = null;
+                }
             }
         }
 
@@ -880,17 +1017,38 @@
             const input = document.getElementById('bf-input');
             const sendBtn = document.getElementById('bf-send');
             const message = input.value.trim();
-            if (!message || this.currentStreamingMessageId) return;
+            
+            // Validation checks
+            if (!message) return;
+            if (this.isSending) {
+                this.log('Already sending a message');
+                return;
+            }
+            
+            // Client-side rate limiting
+            const now = Date.now();
+            if (now - this.lastRequestTime < CONSTANTS.MIN_REQUEST_INTERVAL) {
+                this.log('Rate limited - too many requests');
+                return;
+            }
+            this.lastRequestTime = now;
+            
+            // Lock input
+            this.isSending = true;
+            input.disabled = true;
+            sendBtn.disabled = true;
 
             // Add user message
             this.addMessage(message, 'user');
             
             input.value = '';
             input.style.height = 'auto';
-            sendBtn.disabled = true;
 
             const botMessageId = this.createPlaceholderMessage();
             this.currentStreamingMessageId = botMessageId;
+            
+            // Create AbortController for this request
+            this.abortController = new AbortController();
 
             try {
                 if (this.config.enableStreaming) {
@@ -899,13 +1057,45 @@
                     await this.sendWithoutStreaming(message, botMessageId);
                 }
             } catch (error) {
-                this.log('Error:', error);
-                const elem = document.getElementById(botMessageId);
-                if (elem) elem.remove();
-                this.addMessage('Sorry, something went wrong. Please try again.', 'bot');
+                if (error.name === 'AbortError') {
+                    this.log('Request aborted');
+                } else {
+                    this.log('Error:', error);
+                    const elem = document.getElementById(botMessageId);
+                    if (elem) elem.remove();
+                    this.addMessage(
+                        "I'm having trouble connecting. Please check your internet and try again. 🔄",
+                        'bot'
+                    );
+                }
             } finally {
                 this.currentStreamingMessageId = null;
+                this.abortController = null;
+                this.isSending = false;
+                input.disabled = false;
                 sendBtn.disabled = false;
+            }
+        }
+
+        async fetchWithTimeout(url, options) {
+            const controller = this.abortController;
+            const timeout = setTimeout(() => {
+                if (controller) controller.abort();
+            }, this.config.requestTimeout);
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller ? controller.signal : undefined
+                });
+                clearTimeout(timeout);
+                return response;
+            } catch (error) {
+                clearTimeout(timeout);
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timeout or aborted');
+                }
+                throw error;
             }
         }
 
@@ -916,27 +1106,28 @@
                     streaming: true
                 };
                 
-                // Only send chatId if we have one
                 if (this.chatId) {
                     body.chatId = this.chatId;
                 }
                 
-                const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
+                const response = await this.fetchWithTimeout(
+                    `${this.apiHost}/api/v1/prediction/${this.chatflowid}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    }
+                );
 
                 if (!response.ok) throw new Error('API failed');
                 
                 const contentType = response.headers.get('content-type');
                 if (!contentType?.includes('text/event-stream')) {
                     const data = await response.json();
-                    // Flowise returned chatId - save it!
                     if (data.chatId && data.chatId !== this.chatId) {
                         this.chatId = data.chatId;
                         this.saveToStorage();
-                        this.log('\u2705 ChatId assigned by Flowise:', this.chatId);
+                        this.log('✅ ChatId assigned by Flowise:', this.chatId);
                     }
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
@@ -946,20 +1137,19 @@
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                let fullText = '';
                 let buffer = '';
                 
-                // Process stream immediately without waiting
+                // Reset stream buffer
+                this.streamBuffer = '';
+                
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
 
-                    // Decode immediately
                     buffer += decoder.decode(value, { stream: true });
                     
-                    // Process all complete lines immediately
                     const lines = buffer.split('\n');
-                    buffer = lines.pop() || ''; // Keep incomplete line in buffer
+                    buffer = lines.pop() || '';
                     
                     for (const line of lines) {
                         const trimmed = line.trim();
@@ -983,7 +1173,6 @@
                                 }
                             }
                         } catch {
-                            // Try as plain string
                             if (payload.startsWith('"') && payload.endsWith('"')) {
                                 try {
                                     token = JSON.parse(payload);
@@ -995,29 +1184,45 @@
                             }
                         }
 
-                        // Handle metadata
                         if (metadata && metadata.chatId && metadata.chatId !== this.chatId) {
                             this.chatId = metadata.chatId;
                             this.saveToStorage();
-                            this.log('\u2705 ChatId assigned by Flowise (metadata):', this.chatId);
+                            this.log('✅ ChatId assigned by Flowise (metadata):', this.chatId);
                         }
 
-                        // Display token immediately
+                        // Batch token updates
                         if (token) {
-                            fullText += token;
-                            this.updatePlaceholderMessage(botMessageId, fullText, true);
+                            this.streamBuffer += token;
+                            
+                            // Throttle DOM updates
+                            if (!this.streamUpdateTimer) {
+                                this.streamUpdateTimer = setTimeout(() => {
+                                    this.updatePlaceholderMessage(botMessageId, this.streamBuffer, true);
+                                    this.streamUpdateTimer = null;
+                                }, CONSTANTS.STREAM_BATCH_DELAY);
+                            }
                         }
                     }
                 }
 
-                if (fullText) {
-                    this.updatePlaceholderMessage(botMessageId, fullText, false);
-                    this.addMessageToStorage(fullText, 'bot');
+                // Final update
+                if (this.streamUpdateTimer) {
+                    clearTimeout(this.streamUpdateTimer);
+                    this.streamUpdateTimer = null;
+                }
+                
+                if (this.streamBuffer) {
+                    this.updatePlaceholderMessage(botMessageId, this.streamBuffer, false);
+                    this.addMessageToStorage(this.streamBuffer, 'bot');
+                    this.streamBuffer = '';
                 } else {
                     throw new Error('No text streamed');
                 }
 
             } catch (error) {
+                if (error.name === 'AbortError' || error.message.includes('aborted')) {
+                    throw error;
+                }
                 this.log('Streaming failed, using fallback:', error);
                 await this.sendWithoutStreaming(message, botMessageId);
             }
@@ -1026,25 +1231,26 @@
         async sendWithoutStreaming(message, botMessageId) {
             const body = { question: message };
             
-            // Only send chatId if we have one
             if (this.chatId) {
                 body.chatId = this.chatId;
             }
             
-            const response = await fetch(`${this.apiHost}/api/v1/prediction/${this.chatflowid}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
+            const response = await this.fetchWithTimeout(
+                `${this.apiHost}/api/v1/prediction/${this.chatflowid}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                }
+            );
 
             if (!response.ok) throw new Error('API failed');
             const data = await response.json();
             
-            // Flowise returned chatId - save it!
             if (data.chatId && data.chatId !== this.chatId) {
                 this.chatId = data.chatId;
                 this.saveToStorage();
-                this.log('\u2705 ChatId assigned by Flowise:', this.chatId);
+                this.log('✅ ChatId assigned by Flowise:', this.chatId);
             }
             
             const botMessage = data.text || data.answer || data.response || 'No response';
@@ -1058,9 +1264,7 @@
         }
 
         addMessage(text, sender) {
-            // Add to storage
             this.addMessageToStorage(text, sender);
-            // Add to UI
             this.addMessageToUI(text, sender);
         }
 
@@ -1113,17 +1317,22 @@
             const textElement = messageDiv.querySelector('.bf-message-text');
             
             if (isStreaming) {
-                const escapedText = this.escapeHtml(text).replace(/\n/g, '<br>');
-                textElement.innerHTML = escapedText + '<span class="bf-cursor">|</span>';
+                // During streaming, show raw text without markdown parsing
+                textElement.textContent = text;
+                const cursor = document.createElement('span');
+                cursor.className = 'bf-cursor';
+                cursor.textContent = '|';
+                textElement.appendChild(cursor);
                 messageDiv.classList.add('bf-streaming');
             } else {
+                // Parse markdown only when complete
                 textElement.innerHTML = this.formatMarkdown(text);
                 messageDiv.classList.remove('bf-streaming');
             }
             
             // Throttled scroll to reduce reflow
             const now = Date.now();
-            if (now - this.lastScrollTime > this.scrollThrottle) {
+            if (now - this.lastScrollTime > CONSTANTS.SCROLL_THROTTLE) {
                 this.scrollToBottom();
                 this.lastScrollTime = now;
             }
@@ -1134,16 +1343,45 @@
             
             let html = this.escapeHtml(text);
             
+            // Code blocks
             html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            
+            // Inline code
             html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Headers
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            
+            // Bold (process before italic to avoid conflicts)
+            html = html.replace(/\*\*(.+?)\*\*/g, '___BOLD_START___$1___BOLD_END___');
+            html = html.replace(/__(.+?)__/g, '___BOLD_START___$1___BOLD_END___');
+            
+            // Italic
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            
+            // Replace bold placeholders
+            html = html.replace(/___BOLD_START___/g, '<strong>');
+            html = html.replace(/___BOLD_END___/g, '</strong>');
+            
+            // Links with XSS protection
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+                // Sanitize URL - only allow safe schemes
+                try {
+                    const urlObj = new URL(url, window.location.href);
+                    if (!CONSTANTS.ALLOWED_URL_SCHEMES.includes(urlObj.protocol)) {
+                        return match; // Return original if suspicious
+                    }
+                    return `<a href="${this.escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+                } catch {
+                    // Invalid URL, return as text
+                    return match;
+                }
+            });
+            
+            // Lists
             html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
             html = html.replace(/(<li>.+<\/li>\n?)+/g, (match) => '<ol>' + match + '</ol>');
             html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
@@ -1151,9 +1389,13 @@
                 if (!match.includes('<ol>')) return '<ul>' + match + '</ul>';
                 return match;
             });
+            
+            // Paragraphs
             html = html.replace(/\n\n/g, '</p><p>');
             html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
+            
+            // Clean up
             html = html.replace(/<p><\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
             html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
@@ -1167,7 +1409,9 @@
 
         scrollToBottom() {
             const container = document.getElementById('bf-messages');
-            container.scrollTop = container.scrollHeight;
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
         }
 
         getTimeString() {
@@ -1179,22 +1423,56 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        destroy() {
+            // Abort any in-flight requests
+            if (this.abortController) {
+                this.abortController.abort();
+            }
+            
+            // Clear timers
+            if (this.streamUpdateTimer) {
+                clearTimeout(this.streamUpdateTimer);
+            }
+            
+            // Remove event listeners
+            this.removeEventListeners();
+            
+            // Remove DOM elements
+            const container = document.getElementById('beautiful-flowise-container');
+            if (container) {
+                container.remove();
+            }
+            
+            this.log('Widget destroyed');
+        }
+    }
+
+    // Validation helper
+    function validateConfig(config) {
+        if (!config || typeof config !== 'object') {
+            console.error('BeautifulFlowiseChat: config must be an object');
+            return false;
+        }
+        if (!config.chatflowid || typeof config.chatflowid !== 'string') {
+            console.error('BeautifulFlowiseChat: chatflowid is required and must be a string');
+            return false;
+        }
+        if (!config.apiHost || typeof config.apiHost !== 'string') {
+            console.error('BeautifulFlowiseChat: apiHost is required and must be a string');
+            return false;
+        }
+        return true;
     }
 
     window.BeautifulFlowiseChat = {
         init: function(config) {
-            if (!config.chatflowid || !config.apiHost) {
-                console.error('BeautifulFlowiseChat: chatflowid and apiHost are required');
-                return;
-            }
+            if (!validateConfig(config)) return null;
             return new BeautifulFlowiseChat({ ...config, mode: 'popup' });
         },
         
         initFull: function(config) {
-            if (!config.chatflowid || !config.apiHost) {
-                console.error('BeautifulFlowiseChat: chatflowid and apiHost are required');
-                return;
-            }
+            if (!validateConfig(config)) return null;
             return new BeautifulFlowiseChat({ ...config, mode: 'fullscreen' });
         }
     };

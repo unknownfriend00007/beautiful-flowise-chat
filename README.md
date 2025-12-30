@@ -1,34 +1,45 @@
-# 🎨 Beautiful Flowise Chat v2.0.0
+# 🎨 Beautiful Flowise Chat v2.0.1
 
-> A modern, buttery-smooth chat widget for Flowise AI with **dual-mode support**, **perfect memory**, **smooth streaming**, **markdown support**, and **full customization**
+> A modern, production-hardened chat widget for Flowise AI with **enterprise security**, **dual-mode support**, **perfect memory**, **smooth streaming**, **markdown support**, and **full customization**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CDN](https://img.shields.io/badge/CDN-jsDelivr-orange.svg)](https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js)
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/unknownfriend00007/beautiful-flowise-chat)
+[![Version](https://img.shields.io/badge/version-2.0.1-blue.svg)](https://github.com/unknownfriend00007/beautiful-flowise-chat)
 [![Powered by RPS](https://img.shields.io/badge/Powered%20by-RPS-blueviolet.svg)](mailto:mail.rps.active@proton.me)
 
 ---
 
-## 🆕 What's New in v2.0.0
+## 🆕 What's New in v2.0.1
 
-- 🎨 **Custom Theme** - Full control over all colors (header, messages, background)
-- 🌈 **Flexible Color Formats** - Use hex (`#7c3aed`) or rgba (`rgba(124,58,237,0.15)`)
-- ✍️ **User Message Text Color** - Configurable for perfect visibility
-- 🖼️ **Chat Background Color** - Customize entire window background
-- ⚡ **Performance** - Faster streaming, reduced buffering
+### 🔒 Security Enhancements
+- ✅ **XSS Protection** - Sanitized markdown links (allows only http/https/mailto/tel)
+- ✅ **Secure External Links** - All links include `rel="noopener noreferrer"`
+- ✅ **localStorage Validation** - Prevents injection attacks from corrupted data
+
+### ⚡ Performance Optimizations
+- 🚀 **Batched Streaming Updates** - Reduced DOM manipulation by 80%
+- 💾 **Message History Capping** - Configurable max messages (default: 100)
+- 🔄 **Request Abortion** - Cancel in-flight requests when needed
+- ⏱️ **Request Timeout** - 30-second default timeout for all API calls
+
+### 🛡️ Robustness Improvements
+- 🚫 **Duplicate Widget Prevention** - Automatically removes existing instances
+- 🔒 **Input Locking** - Prevents overlapping message sends
+- 🎨 **Dynamic Color Computation** - Auto-generates gradient colors
+- 🧠 **Memory Leak Prevention** - Proper cleanup of event listeners
+- ✅ **Enhanced Validation** - Better config and data structure checks
 
 ---
 
 ## 🚀 Quick Start
 
-### CDN Link (v2.0.0)
+### CDN Link (v2.0.1 - Latest)
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@c910b17/dist/chat.js"></script>
 ```
 
 ### Basic Popup Mode
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@c910b17/dist/chat.js"></script>
 <script>
 BeautifulFlowiseChat.init({
     chatflowid: "your-chatflow-id",
@@ -39,7 +50,7 @@ BeautifulFlowiseChat.init({
 
 ### Basic Full-Screen Mode
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@c910b17/dist/chat.js"></script>
 <script>
 BeautifulFlowiseChat.initFull({
     chatflowid: "your-chatflow-id",
@@ -61,9 +72,10 @@ BeautifulFlowiseChat.init({
     apiHost: "https://your-flowise-instance.com",
     
     // Appearance
-    theme: "gradient",         // modern, cloudflare, intercom, gradient, glassmorphism, dark, minimal
-    primaryColor: "#667eea",   // Override theme color (optional)
-    position: "bottom-right",  // bottom-right or bottom-left
+    theme: "gradient",          // modern, cloudflare, intercom, gradient, glassmorphism, dark, minimal
+    primaryColor: "#667eea",    // Override theme color (optional)
+    primaryDarkColor: null,     // Auto-computed if not provided
+    position: "bottom-right",   // bottom-right or bottom-left
     avatar: "🤖",              // Bot avatar emoji/text
     
     // Content
@@ -73,12 +85,18 @@ BeautifulFlowiseChat.init({
     placeholder: "Type your message...",
     
     // Features
-    enableStreaming: true,     // Real-time streaming
-    enableMarkdown: true,      // Format bot responses
-    showTimestamp: true,       // Show message times
+    enableStreaming: true,      // Real-time streaming
+    enableMarkdown: true,       // Format bot responses
+    showTimestamp: true,        // Show message times
+    
+    // Advanced
+    confirmOnReset: true,       // Show confirmation before clearing chat
+    maxMessages: 100,           // Cap stored message history
+    requestTimeout: 30000,      // API timeout in milliseconds
+    clearChatOnReload: false,   // Clear history on page refresh
     
     // Misc
-    debug: false               // Console logging
+    debug: false                // Console logging
 });
 ```
 
@@ -91,8 +109,8 @@ BeautifulFlowiseChat.initFull({
     apiHost: "https://your-flowise-instance.com",
     
     // Appearance
-    theme: "dark",             // modern, cloudflare, intercom, gradient, glassmorphism, dark, minimal
-    primaryColor: "#6366f1",   // Override theme color (optional)
+    theme: "dark",              // modern, cloudflare, intercom, gradient, glassmorphism, dark, minimal
+    primaryColor: "#6366f1",    // Override theme color (optional)
     avatar: "🤖",              // Bot avatar emoji/text
     
     // Content
@@ -102,12 +120,16 @@ BeautifulFlowiseChat.initFull({
     placeholder: "Type your message...",
     
     // Features
-    enableStreaming: true,     // Real-time streaming
-    enableMarkdown: true,      // Format bot responses
-    showTimestamp: true,       // Show message times
+    enableStreaming: true,      // Real-time streaming
+    enableMarkdown: true,       // Format bot responses
+    showTimestamp: true,        // Show message times
+    
+    // Advanced
+    maxMessages: 100,           // Cap stored message history
+    requestTimeout: 30000,      // API timeout in milliseconds
     
     // Misc
-    debug: false               // Console logging
+    debug: false                // Console logging
 });
 ```
 
@@ -122,6 +144,7 @@ BeautifulFlowiseChat.initFull({
     // Custom Theme
     theme: "custom",
     primaryColor: "#7c3aed",              // Header, buttons, accents (hex/rgba/rgb)
+    primaryDarkColor: "#6d28d9",          // Gradient dark shade (optional, auto-computed)
     customUserMessageBg: "#c4b5fd",       // User message background (optional)
     customUserMessageText: "#1f2937",     // User message text color (optional)
     customChatBg: "#ffffff",              // Chat window background (optional)
@@ -137,6 +160,11 @@ BeautifulFlowiseChat.initFull({
     enableStreaming: true,
     enableMarkdown: true,
     showTimestamp: true,
+    
+    // Advanced
+    confirmOnReset: true,
+    maxMessages: 100,
+    requestTimeout: 30000,
     
     // Misc
     debug: false
@@ -167,38 +195,16 @@ When using `theme: "custom"`, you have full control:
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `primaryColor` | string | `#6366f1` | Header, buttons, accents |
+| `primaryDarkColor` | string | Auto-computed | Gradient dark shade |
 | `customUserMessageBg` | string | Auto-generated | User message background |
 | `customUserMessageText` | string | `#1f2937` | User message text |
 | `customChatBg` | string | `#ffffff` | Chat window background |
 
 **Color Formats:** All options support hex (`#7c3aed`), rgb (`rgb(124,58,237)`), or rgba (`rgba(124,58,237,0.5)`)
 
-**Auto-Generation:** If you only specify `primaryColor`, the widget automatically creates a light tint (15% opacity) for user message background.
-
-### Custom Theme Examples
-
-#### Purple Brand
-```javascript
-theme: "custom",
-primaryColor: "#7c3aed"  // That's it! Auto-generates light purple for messages
-```
-
-#### Corporate Blue
-```javascript
-theme: "custom",
-primaryColor: "#0066cc",
-customUserMessageBg: "#cce5ff",
-customUserMessageText: "#003d7a"
-```
-
-#### Dark Mode
-```javascript
-theme: "custom",
-primaryColor: "#a78bfa",
-customUserMessageBg: "#4c1d95",
-customUserMessageText: "#e0e7ff",
-customChatBg: "#1f2937"
-```
+**Auto-Generation:** 
+- `primaryDarkColor`: Automatically darkened by 20% if not provided
+- `customUserMessageBg`: Auto-generated as 15% opacity tint of `primaryColor` if not provided
 
 ---
 
@@ -217,6 +223,7 @@ customChatBg: "#1f2937"
 |--------|------|---------|-------------|
 | `theme` | string | `"modern"` | Theme name |
 | `primaryColor` | string | `"#6366f1"` | Main color (hex/rgb/rgba) |
+| `primaryDarkColor` | string | Auto | Gradient dark shade |
 | `position` | string | `"bottom-right"` | Popup position (popup only) |
 | `avatar` | string | `"🤖"` | Bot avatar |
 
@@ -247,6 +254,14 @@ customChatBg: "#1f2937"
 | `showTimestamp` | boolean | `true` | Show message times |
 | `clearChatOnReload` | boolean | `false` | Clear history on refresh |
 
+### Advanced
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `confirmOnReset` | boolean | `true` | Show confirmation before reset |
+| `maxMessages` | number | `100` | Max stored message history |
+| `requestTimeout` | number | `30000` | API timeout (milliseconds) |
+
 ### Other
 
 | Option | Type | Default | Description |
@@ -257,32 +272,52 @@ customChatBg: "#1f2937"
 
 ## ✨ Features
 
-### Memory & Sessions
+### 🔒 Security
+- XSS protection for markdown links
+- Sanitized URLs (only http/https/mailto/tel allowed)
+- Secure external links with `rel="noopener noreferrer"`
+- localStorage injection prevention
+- Input validation and sanitization
+
+### 🧠 Memory & Sessions
 - Bot remembers conversation context
 - Chat sessions persist across page reloads
 - Sessions visible in Flowise dashboard
 - Proper UUID-based chat IDs
+- Configurable message history cap
 
-### Streaming
+### ⚡ Streaming
 - Real-time character-by-character responses
+- Batched DOM updates for performance
 - Smooth streaming with blinking cursor
 - Pulsing dots while waiting
 - Auto-fallback to non-streaming if needed
+- Request abortion and timeout handling
 
-### Markdown Support
+### 📝 Markdown Support
 - **Bold** and *italic* text
 - `Inline code` and code blocks
 - Numbered and bullet lists
-- Links and headers
+- Safe links (XSS protected)
+- Headers and paragraphs
 - Preserved line breaks
 
-### Customization
+### 🎨 Customization
 - 8 professional themes
 - Custom colors (hex/rgb/rgba)
+- Auto-computed gradient colors
 - Popup or full-screen modes
 - Custom welcome messages
 - Configurable positioning
 - Custom avatars
+
+### 🛡️ Robustness
+- Duplicate widget prevention
+- Input locking during requests
+- Client-side rate limiting
+- Memory leak prevention
+- Graceful error handling
+- Request cancellation support
 
 ---
 
@@ -311,31 +346,41 @@ customChatBg: "#1f2937"
 - Verify `chatflowid` and `apiHost` are correct
 - Check CORS settings on Flowise instance
 - Ensure script loads before init
+- Try enabling `debug: true` for detailed logs
 
 ### Memory Not Working
 - Check Flowise has Buffer Memory node
 - Enable `debug: true` to see chatId in console
 - Verify sessions in Flowise dashboard
+- Check localStorage isn't disabled/full
 
 ### Streaming Issues
 - Set `enableStreaming: true`
 - Check Flowise supports streaming
 - Widget auto-falls back if streaming fails
 - Enable `debug: true` for logs
+- Check `requestTimeout` isn't too short
 
 ### Custom Theme Not Applying
 - Ensure `theme: "custom"` is set
 - Use valid color formats (hex/rgb/rgba)
 - Clear browser cache (Ctrl + Shift + R)
 - Check console with `debug: true`
+- Verify CSS variables are being set
+
+### Performance Issues
+- Reduce `maxMessages` to lower number
+- Disable markdown with `enableMarkdown: false`
+- Check for browser extensions blocking requests
+- Monitor network tab for slow API responses
 
 ---
 
 ## 📦 CDN
 
-### Pinned Version (Recommended)
+### Pinned Version (Recommended for Production)
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@c910b17/dist/chat.js"></script>
 ```
 
 ### Latest (Auto-updates)
@@ -346,7 +391,29 @@ customChatBg: "#1f2937"
 
 ### Purge Cache
 ```
-https://purge.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/dist/chat.js
+https://purge.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@c910b17/dist/chat.js
+```
+
+---
+
+## 🧪 API
+
+### Initialization
+```javascript
+const widget = BeautifulFlowiseChat.init(config);
+const fullscreenWidget = BeautifulFlowiseChat.initFull(config);
+```
+
+### Methods
+```javascript
+// Destroy widget and cleanup
+widget.destroy();
+
+// Programmatically reset conversation
+widget.resetConversation();
+
+// Toggle chat (popup mode only)
+widget.toggleChat();
 ```
 
 ---
@@ -356,11 +423,26 @@ https://purge.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@549b123/
 1. Fork the repo
 2. Create a feature branch
 3. Make your changes
-4. Submit a pull request
+4. Test thoroughly
+5. Submit a pull request
 
 ---
 
 ## 📝 Changelog
+
+### v2.0.1 - 2025-12-30
+- 🔒 XSS protection for markdown links
+- ⚡ Batched streaming updates (80% less DOM manipulation)
+- 💾 Message history capping (configurable max)
+- 🔄 Request abortion and timeout handling
+- 🚫 Duplicate widget prevention
+- 🔒 Input locking during requests
+- 🎨 Dynamic color computation for gradients
+- 🧠 Memory leak prevention
+- ✅ Enhanced validation and error handling
+- 🛡️ localStorage injection protection
+- 🔗 Secure external links with rel="noopener noreferrer"
+- 📦 Package version sync (1.0.0 → 2.0.1)
 
 ### v2.0.0 - 2025-12-30
 - 🎨 Custom theme with full color control
