@@ -1,6 +1,6 @@
 /**
- * Beautiful Flowise Chat Widget v1.4.9
- * Buttery smooth streaming with loading animation
+ * Beautiful Flowise Chat Widget v1.5.0
+ * Buttery smooth streaming with proper memory retention
  * Created by RPS
  */
 
@@ -138,6 +138,7 @@
     display: flex;
     gap: 10px;
     animation: fadeIn 0.3s;
+    width: 100%;
 }
 
 @keyframes fadeIn {
@@ -146,20 +147,21 @@
 }
 
 .bf-bot-message { 
-    align-self: flex-start;
+    justify-content: flex-start;
 }
 
 .bf-user-message { 
-    align-self: flex-end;
-    flex-direction: row-reverse;
     justify-content: flex-end;
 }
 
 .bf-message-content {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     max-width: 75%;
+}
+
+.bf-bot-message .bf-message-content {
+    align-items: flex-start;
 }
 
 .bf-user-message .bf-message-content {
@@ -596,7 +598,9 @@
                     body: JSON.stringify({ 
                         question: message, 
                         streaming: true,
-                        sessionId: this.sessionId
+                        overrideConfig: {
+                            sessionId: this.sessionId
+                        }
                     })
                 });
 
@@ -689,7 +693,9 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     question: message,
-                    sessionId: this.sessionId
+                    overrideConfig: {
+                        sessionId: this.sessionId
+                    }
                 })
             });
 
