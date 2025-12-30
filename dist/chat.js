@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.4.6
+ * Beautiful Flowise Chat Widget v1.4.7
  * Buttery smooth streaming with loading animation
  * Created by RPS
  */
@@ -174,10 +174,12 @@
     line-height: 1.6;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     word-wrap: break-word;
-    word-break: break-word;
+    overflow-wrap: break-word;
+    word-break: normal;
     white-space: pre-wrap;
     display: inline-block;
     max-width: 85%;
+    min-width: 40px;
 }
 
 .bf-user-message .bf-message-text {
