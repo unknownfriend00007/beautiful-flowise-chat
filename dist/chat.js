@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.7.1
+ * Beautiful Flowise Chat Widget v1.7.2
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -21,10 +21,10 @@
         showTimestamp: true,
         enableStreaming: true,
         enableMarkdown: true,
-        clearChatOnReload: false, // Match Flowise's default
+        clearChatOnReload: false,
         debug: false,
         avatar: '\ud83e\udd16',
-        mode: 'popup' // 'popup' or 'fullscreen'
+        mode: 'popup'
     };
 
     const styles = `
@@ -550,13 +550,11 @@
             this.config = { ...defaults, ...config };
             this.chatflowid = config.chatflowid;
             this.apiHost = config.apiHost;
-            this.storageKey = `${this.chatflowid}_EXTERNAL`; // Match Flowise pattern
+            this.storageKey = `${this.chatflowid}_EXTERNAL`;
             this.isOpen = this.config.mode === 'fullscreen';
             this.currentStreamingMessageId = null;
             
-            // Load from localStorage using Flowise's pattern
             this.loadFromStorage();
-            
             this.init();
         }
 
@@ -565,7 +563,6 @@
             this.createWidget();
             this.attachEventListeners();
             
-            // Restore messages if clearChatOnReload is false
             if (!this.config.clearChatOnReload) {
                 this.restoreMessages();
             }
@@ -615,18 +612,13 @@
 
         resetConversation() {
             if (confirm('Are you sure you want to clear the chat history?')) {
-                // Clear storage
                 localStorage.removeItem(this.storageKey);
-                
-                // Generate new chatId
                 this.chatId = generateUUID();
                 this.chatHistory = [];
                 
-                // Clear UI
                 const messagesContainer = document.getElementById('bf-messages');
                 messagesContainer.innerHTML = '';
                 
-                // Show welcome message
                 if (this.config.welcomeMessage) {
                     this.addMessage(this.config.welcomeMessage, 'bot', false);
                 }
@@ -639,13 +631,11 @@
             const messagesContainer = document.getElementById('bf-messages');
             messagesContainer.innerHTML = '';
             
-            // Add welcome message if no history
             if (this.chatHistory.length === 0 && this.config.welcomeMessage) {
                 this.addMessage(this.config.welcomeMessage, 'bot', false);
                 return;
             }
             
-            // Restore conversation
             this.chatHistory.forEach(msg => {
                 this.addMessage(msg.content, msg.role, false);
             });
@@ -774,10 +764,7 @@
             const message = input.value.trim();
             if (!message || this.currentStreamingMessageId) return;
 
-            // Add to UI
             this.addMessage(message, 'user');
-            
-            // Add to chat history
             this.chatHistory.push({ role: 'user', content: message });
             this.saveToStorage();
             
@@ -822,11 +809,12 @@
                 const contentType = response.headers.get('content-type');
                 if (!contentType?.includes('text/event-stream')) {
                     const data = await response.json();
-                    if (data.chatId) this.chatId = data.chatId;
+                    if (data.chatId) {
+                        this.chatId = data.chatId;
+                        this.saveToStorage(); // CRITICAL: Save immediately after chatId update
+                    }
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
-                    
-                    // Save bot response to history
                     this.chatHistory.push({ role: 'bot', content: botMessage });
                     this.saveToStorage();
                     return;
@@ -837,7 +825,6 @@
                 let fullText = '';
                 let buffer = '';
                 let streamEnded = false;
-                let firstTokenReceived = false;
 
                 while (!streamEnded) {
                     const { value, done } = await reader.read();
@@ -888,13 +875,11 @@
 
                         if (metadata && metadata.chatId) {
                             this.chatId = metadata.chatId;
+                            this.saveToStorage(); // CRITICAL: Save immediately after chatId update
                             this.log('Updated Chat ID from metadata:', this.chatId);
                         }
 
                         if (token) {
-                            if (!firstTokenReceived) {
-                                firstTokenReceived = true;
-                            }
                             fullText += token;
                             this.updatePlaceholderMessage(botMessageId, fullText, true);
                         }
@@ -903,8 +888,6 @@
 
                 if (fullText) {
                     this.updatePlaceholderMessage(botMessageId, fullText, false);
-                    
-                    // Save bot response to history
                     this.chatHistory.push({ role: 'bot', content: fullText });
                     this.saveToStorage();
                 } else {
@@ -930,12 +913,13 @@
             if (!response.ok) throw new Error('API failed');
             const data = await response.json();
             
-            if (data.chatId) this.chatId = data.chatId;
+            if (data.chatId) {
+                this.chatId = data.chatId;
+                this.saveToStorage(); // CRITICAL: Save immediately after chatId update
+            }
             
             const botMessage = data.text || data.answer || data.response || 'No response';
             this.updatePlaceholderMessage(botMessageId, botMessage, false);
-            
-            // Save bot response to history
             this.chatHistory.push({ role: 'bot', content: botMessage });
             this.saveToStorage();
         }
@@ -1053,7 +1037,6 @@
     }
 
     window.BeautifulFlowiseChat = {
-        // Popup mode (default - bottom-right bubble)
         init: function(config) {
             if (!config.chatflowid || !config.apiHost) {
                 console.error('BeautifulFlowiseChat: chatflowid and apiHost are required');
@@ -1062,7 +1045,6 @@
             return new BeautifulFlowiseChat({ ...config, mode: 'popup' });
         },
         
-        // Full-screen mode (fills entire viewport)
         initFull: function(config) {
             if (!config.chatflowid || !config.apiHost) {
                 console.error('BeautifulFlowiseChat: chatflowid and apiHost are required');
