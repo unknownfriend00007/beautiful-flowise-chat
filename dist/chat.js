@@ -1,5 +1,5 @@
 /**
- * Beautiful Flowise Chat Widget v1.9.6
+ * Beautiful Flowise Chat Widget v1.9.7
  * Supports both Popup and Full-Screen modes
  * Created by RPS
  */
@@ -275,7 +275,7 @@
 .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.15) !important;
     color: #1f2937 !important;
-    border: 1px solid rgba(99, 102, 241, 0.2) !important;
+    border: none !important;
     box-shadow: none !important;
 }
 
@@ -448,7 +448,7 @@
 .bf-theme-cloudflare .bf-user-message .bf-message-text {
     background: rgba(243, 128, 32, 0.15) !important;
     color: #1f2937 !important;
-    border: 1px solid rgba(243, 128, 32, 0.25) !important;
+    border: none !important;
     box-shadow: none !important;
 }
 
@@ -459,7 +459,7 @@
 .bf-theme-intercom .bf-user-message .bf-message-text {
     background: rgba(31, 141, 237, 0.15) !important;
     color: #1f2937 !important;
-    border: 1px solid rgba(31, 141, 237, 0.25) !important;
+    border: none !important;
     box-shadow: none !important;
 }
 
@@ -470,7 +470,7 @@
 .bf-theme-gradient .bf-user-message .bf-message-text {
     background: rgba(102, 126, 234, 0.15) !important;
     color: #1f2937 !important;
-    border: 1px solid rgba(102, 126, 234, 0.25) !important;
+    border: none !important;
     box-shadow: none !important;
 }
 
@@ -482,7 +482,7 @@
 .bf-theme-glassmorphism .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.15) !important;
     color: #1f2937 !important;
-    border: 1px solid rgba(99, 102, 241, 0.25) !important;
+    border: none !important;
     box-shadow: none !important;
     backdrop-filter: blur(10px);
 }
@@ -501,7 +501,7 @@
 .bf-theme-dark .bf-user-message .bf-message-text {
     background: rgba(99, 102, 241, 0.25) !important;
     color: #e0e7ff !important;
-    border: 1px solid rgba(99, 102, 241, 0.35) !important;
+    border: none !important;
     box-shadow: none !important;
 }
 .bf-theme-dark .bf-input { 
@@ -530,7 +530,7 @@
 .bf-theme-minimal .bf-user-message .bf-message-text {
     background: rgba(0, 0, 0, 0.06) !important;
     color: #1f2937 !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border: none !important;
     box-shadow: none !important;
 }
     `;
