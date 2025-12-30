@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful Flowise Chat - Full-Screen Mode</title>
+</head>
+<body style="margin: 0; padding: 0; overflow: hidden;">
+    
+    <!-- Beautiful Flowise Chat Widget (Full-Screen) -->
+    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@52bf600/dist/chat.js"></script>
+    <script>
+        BeautifulFlowiseChat.initFull({
+            chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
+            apiHost: "https://ruvatron-flowhybrid-3.hf.space",
+            theme: 'modern',
+            primaryColor: '#6366f1',
+            title: 'RUVA AI-R1',
+            subtitle: 'Online',
+            welcomeMessage: '👋 Hi! How can I help you today?',
+            placeholder: 'Type your message...',
+            showTimestamp: true,
+            enableStreaming: true,
+            enableMarkdown: true,
+            debug: true
+        });
+    </script>
+</body>
+</html>
