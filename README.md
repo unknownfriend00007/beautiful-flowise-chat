@@ -1,38 +1,88 @@
-# 🎨 Beautiful Flowise Chat v1.4.2
+# 🎨 Beautiful Flowise Chat v1.6.0
 
-> A modern, buttery-smooth chat widget for Flowise AI with **PRIMUS-V2 streaming**, **markdown support**, and **pulsing animations**
+> A modern, buttery-smooth chat widget for Flowise AI with **dual-mode support**, **perfect memory**, **smooth streaming**, and **markdown support**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CDN](https://img.shields.io/badge/CDN-jsDelivr-orange.svg)](https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js)
-[![Version](https://img.shields.io/badge/version-1.4.2-blue.svg)](https://github.com/unknownfriend00007/beautiful-flowise-chat)
+[![CDN](https://img.shields.io/badge/CDN-jsDelivr-orange.svg)](https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@52bf600/dist/chat.js)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg)](https://github.com/unknownfriend00007/beautiful-flowise-chat)
 [![Powered by RPS](https://img.shields.io/badge/Powered%20by-RPS-blueviolet.svg)](mailto:mail.rps.active@proton.me)
 
 ---
 
-## 🆕 What's New in v1.4.2
+## 🆕 What's New in v1.6.0
 
-### 🚀 PRIMUS-V2 Streaming Engine
-- ✨ **Buttery Smooth Streaming** - Character-by-character updates with no flashing
-- 🎯 **Pre-created Placeholders** - Message bubbles appear instantly
-- 🔄 **Smart Token Appending** - No DOM recreation, just smooth updates
-- 🛡️ **Robust Buffer Handling** - Processes complete lines only
-- 💪 **Fallback System** - Auto-switches to non-streaming if needed
+### 🎯 Dual-Mode Support (Like Official Flowise!)
+- 🪟 **Popup Mode** - Classic bottom-right bubble with toggle
+- 📺 **Full-Screen Mode** - Fills entire viewport for dedicated chat pages
+- 🎛️ **Two Init Methods** - `init()` for popup, `initFull()` for full-screen
+- 🎨 **Same Great Features** - Both modes have streaming, memory, markdown
 
-### 🎨 UI Enhancements
-- 💫 **Pulsing Loading Dots** - Beautiful animation while waiting for AI
-- 🎭 **No Blank Bubbles** - Loading dots show immediately
-- 🚫 **No Avatars in Messages** - Clean, spacious design
-- 📝 **Perfect Headers** - Markdown `###` hidden, text styled properly
+### 🧠 Perfect Memory (v1.5.1)
+- ✅ **Chat ID at Root Level** - Proper Flowise API implementation
+- 💾 **Session Persistence** - Bot remembers your conversation
+- 🔍 **Visible in Flowise UI** - View chat history in dashboard
+- 🎲 **UUID Format** - Standard format for compatibility
+
+### 🚀 PRIMUS-V2 Streaming
+- ✨ **Buttery Smooth Streaming** - Character-by-character updates
+- 💫 **Pulsing Loading Dots** - Beautiful animation while waiting
 - ✍️ **Blinking Cursor** - Shows during streaming
+- 🛡️ **Robust Fallback** - Auto-switches if needed
 
-### 🔧 Technical Improvements  
-- 📦 **Disabled Send Button** - Prevents spam during streaming
-- 🎯 **Better Token Extraction** - Multiple fallbacks for quirky formats
-- 🧹 **Cleaner Code** - Based on production PRIMUS-V2 architecture
+---
+
+## 🚀 Quick Start
+
+### 🪟 Popup Mode (Bottom-Right Bubble)
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@52bf600/dist/chat.js"></script>
+<script>
+BeautifulFlowiseChat.init({
+    chatflowid: "your-chatflow-id",
+    apiHost: "https://your-flowise-instance.com"
+});
+</script>
+```
+
+### 📺 Full-Screen Mode (Fills Entire Page)
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@52bf600/dist/chat.js"></script>
+<script>
+BeautifulFlowiseChat.initFull({
+    chatflowid: "your-chatflow-id",
+    apiHost: "https://your-flowise-instance.com"
+});
+</script>
+```
+
+---
+
+## 🎭 Mode Comparison
+
+| Feature | Popup Mode | Full-Screen Mode |
+|---------|-----------|------------------|
+| **Chat Bubble** | ✅ Bottom-right/left | ❌ No bubble |
+| **Size** | 400×600px | 100vw×100vh |
+| **Rounded Corners** | ✅ Yes | ❌ Square |
+| **Minimize Button** | ✅ Yes | ❌ No |
+| **Toggle Open/Close** | ✅ Click to toggle | ❌ Always visible |
+| **Auto-focus Input** | On open | ✅ On page load |
+| **Memory** | ✅ Perfect | ✅ Perfect |
+| **Streaming** | ✅ Smooth | ✅ Smooth |
+| **Markdown** | ✅ Full | ✅ Full |
+| **Best For** | Landing pages | Dedicated chat |
 
 ---
 
 ## ✨ Features
+
+### 🧠 Memory & Sessions
+- **Perfect Retention** - Bot remembers your conversation
+- **Chat ID Implementation** - Proper Flowise API format
+- **Flowise UI Visible** - See chats in your dashboard
+- **UUID Format** - Standard session identification
 
 ### 🌊 Streaming
 - **Real-time responses** as they're generated
@@ -49,7 +99,7 @@
 - **Numbered lists**: `1. Item`
 - **Bullet lists**: `- Item` or `* Item`
 - **Links**: `[text](url)`
-- **Headers**: `# H1`, `## H2`, `### H3` (symbols hidden!)
+- **Headers**: `# H1`, `## H2`, `### H3`
 - Line breaks preserved
 
 ### 🎨 Themes
@@ -63,46 +113,80 @@
 
 ### 🎛️ Customization
 - 🎨 Custom primary colors
-- 📍 Positioning (bottom-right/left)
+- 📍 Positioning (bottom-right/left) - popup only
 - 💬 Custom welcome messages
 - 🕐 Optional timestamps
 - 🤖 Custom avatar emoji
-- 📏 Adjustable size
+- 🎭 Two display modes
 
 ---
 
-## 🚀 Quick Start
+## 📖 Usage Guide
 
-### Basic Setup (2 lines!)
+### Example 1: Popup Mode (Basic)
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js"></script>
-<script>
-BeautifulFlowiseChat.init({
-    chatflowid: "your-chatflow-id",
-    apiHost: "https://your-flowise-instance.com"
-});
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Website</title>
+</head>
+<body>
+    <h1>Welcome to my site!</h1>
+    
+    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@52bf600/dist/chat.js"></script>
+    <script>
+    BeautifulFlowiseChat.init({
+        chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
+        apiHost: "https://ruvatron-flowhybrid-3.hf.space",
+        theme: "gradient"
+    });
+    </script>
+</body>
+</html>
 ```
 
-### With All Options
+### Example 2: Full-Screen Mode
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js"></script>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat with AI</title>
+</head>
+<body style="margin: 0; padding: 0;">
+    
+    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@52bf600/dist/chat.js"></script>
+    <script>
+    BeautifulFlowiseChat.initFull({
+        chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
+        apiHost: "https://ruvatron-flowhybrid-3.hf.space",
+        title: "AI Assistant",
+        theme: "modern"
+    });
+    </script>
+</body>
+</html>
+```
+
+### Example 3: With All Options
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@52bf600/dist/chat.js"></script>
 <script>
 BeautifulFlowiseChat.init({
     // Required
     chatflowid: "your-chatflow-id",
     apiHost: "https://your-flowise-instance.com",
     
-    // Streaming
+    // Streaming & Features
     enableStreaming: true,     // Enable smooth streaming (default: true)
     enableMarkdown: true,      // Format responses (default: true)
     
     // Appearance
     theme: "gradient",         // Theme name (default: "modern")
     primaryColor: "#667eea",   // Custom color (optional)
-    position: "bottom-right",  // "bottom-right" or "bottom-left"
+    position: "bottom-right",  // "bottom-right" or "bottom-left" (popup only)
     avatar: "🤖",              // Emoji or text
     
     // Content
@@ -117,51 +201,6 @@ BeautifulFlowiseChat.init({
 });
 </script>
 ```
-
----
-
-## 📖 Usage Guide
-
-### Step 1: Get Your Flowise Details
-
-1. Open your Flowise instance
-2. Go to your chatflow
-3. Click **"Embed"** or **"API"**
-4. Copy your:
-   - **Chatflow ID** (e.g., `a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f`)
-   - **API Host** (e.g., `https://your-instance.com`)
-
-### Step 2: Add to Your Website
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My Website</title>
-</head>
-<body>
-    <h1>Welcome to my site!</h1>
-    
-    <!-- Add this at the bottom before </body> -->
-    <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js"></script>
-    <script>
-    BeautifulFlowiseChat.init({
-        chatflowid: "YOUR_CHATFLOW_ID",
-        apiHost: "https://YOUR_FLOWISE_HOST.com",
-        theme: "gradient",
-        enableStreaming: true
-    });
-    </script>
-</body>
-</html>
-```
-
-### Step 3: Test It!
-
-1. Open your website
-2. Look for the chat button in the bottom-right corner
-3. Click to open the chat
-4. Send a message and watch the smooth streaming! 🎉
 
 ---
 
@@ -205,81 +244,42 @@ BeautifulFlowiseChat.init({
 
 ---
 
-## 🎬 Streaming Flow
+## 🎬 How It Works
 
-### What You'll See
+### Popup Mode Flow
 
-1. **User types** → Message appears instantly
-2. **Three dots pulse** → In your theme color 🎨
-3. **First token arrives** → Dots replaced by text
-4. **Streaming** → Text builds character-by-character with cursor `|`
-5. **Done** → Cursor removed, markdown formatted ✨
+1. **Page loads** → Chat bubble appears bottom-right
+2. **User clicks** → Chat window opens smoothly
+3. **User types** → Message appears instantly
+4. **Three dots pulse** → Waiting for AI
+5. **Streaming starts** → Text builds character-by-character
+6. **Done** → Markdown formatted, memory saved ✨
+7. **Next message** → Bot remembers context!
 
-### Technical Details
+### Full-Screen Mode Flow
 
-- **No blank bubbles** - Loading dots appear immediately
-- **No flashing** - DOM updates in place, never recreated
-- **PRIMUS-V2 engine** - Production-tested architecture
-- **Buffer handling** - Only processes complete lines
-- **Auto-fallback** - Works even if streaming fails
+1. **Page loads** → Chat fills entire screen
+2. **Input auto-focused** → Ready to type immediately
+3. **Same smooth experience** → Streaming, memory, markdown
+4. **Always visible** → No toggle needed
 
 ---
 
-## 💡 Examples
+## 💡 Use Cases
 
-### Example 1: Basic Chat
+### 🪟 Popup Mode Perfect For:
+- 💼 Business websites with support chat
+- 📚 Documentation sites with AI helper
+- 🛒 E-commerce with shopping assistant
+- 📝 Blogs with Q&A bot
+- 🏢 Corporate sites with info bot
 
-```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js"></script>
-<script>
-BeautifulFlowiseChat.init({
-    chatflowid: "a32ee1fe-b6bd-43e0-846b-d95b48a5ad6f",
-    apiHost: "https://ruvatron-flowhybrid-3.hf.space"
-});
-</script>
-```
-
-### Example 2: Custom Theme & Colors
-
-```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js"></script>
-<script>
-BeautifulFlowiseChat.init({
-    chatflowid: "your-id",
-    apiHost: "https://your-host.com",
-    theme: "dark",
-    primaryColor: "#10b981",
-    avatar: "🧠",
-    title: "Brain AI",
-    welcomeMessage: "Ask me anything!"
-});
-</script>
-```
-
-### Example 3: Multiple Chats on Same Page
-
-```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js"></script>
-<script>
-// Support chat
-BeautifulFlowiseChat.init({
-    chatflowid: "support-id",
-    apiHost: "https://your-host.com",
-    theme: "intercom",
-    title: "Support",
-    position: "bottom-right"
-});
-
-// Sales chat
-BeautifulFlowiseChat.init({
-    chatflowid: "sales-id",
-    apiHost: "https://your-host.com",
-    theme: "cloudflare",
-    title: "Sales",
-    position: "bottom-left"
-});
-</script>
-```
+### 📺 Full-Screen Mode Perfect For:
+- 🤖 Dedicated AI chat applications
+- 📱 Embedded in mobile apps (WebView)
+- 💬 Chat-first interfaces
+- 🎓 Educational AI tutors
+- 🎮 Interactive AI experiences
 
 ---
 
@@ -293,7 +293,7 @@ BeautifulFlowiseChat.init({
 | `apiHost` | string | **required** | Your Flowise instance URL |
 | `theme` | string | `"modern"` | Theme name |
 | `primaryColor` | string | `"#6366f1"` | Custom hex color |
-| `position` | string | `"bottom-right"` | `"bottom-right"` or `"bottom-left"` |
+| `position` | string | `"bottom-right"` | `"bottom-right"` or `"bottom-left"` (popup only) |
 | `enableStreaming` | boolean | `true` | Enable real-time streaming |
 | `enableMarkdown` | boolean | `true` | Format AI responses |
 | `title` | string | `"AI Assistant"` | Chat header title |
@@ -308,10 +308,11 @@ BeautifulFlowiseChat.init({
 ### Methods
 
 ```javascript
-// Initialize widget
-const chat = BeautifulFlowiseChat.init(config);
+// Popup mode (bottom-right bubble)
+const chat1 = BeautifulFlowiseChat.init(config);
 
-// Widget is self-contained - no additional methods needed!
+// Full-screen mode (fills viewport)
+const chat2 = BeautifulFlowiseChat.initFull(config);
 ```
 
 ---
@@ -324,7 +325,14 @@ const chat = BeautifulFlowiseChat.init(config);
 2. ✅ Verify `chatflowid` is correct
 3. ✅ Verify `apiHost` is correct (no trailing slash)
 4. ✅ Check CORS settings on your Flowise instance
-5. ✅ Make sure script loads before `init()`
+5. ✅ Make sure script loads before `init()` or `initFull()`
+
+### Memory Not Working?
+
+1. ✅ Update to v1.6.0 (has proper chatId implementation)
+2. ✅ Check Flowise has Buffer Memory node
+3. ✅ Enable `debug: true` to see chatId in console
+4. ✅ Check Flowise UI to verify sessions are saving
 
 ### Streaming Not Working?
 
@@ -333,12 +341,11 @@ const chat = BeautifulFlowiseChat.init(config);
 3. ✅ Widget will auto-fallback to non-streaming if SSE fails
 4. ✅ Enable `debug: true` to see logs
 
-### Styling Issues?
+### Full-Screen Mode Issues?
 
-1. ✅ Widget uses scoped styles - shouldn't conflict
-2. ✅ Try different themes
-3. ✅ Use `primaryColor` to match your brand
-4. ✅ Check z-index (widget uses `999999`)
+1. ✅ Make sure to use `initFull()` not `init()`
+2. ✅ Set body margin/padding to 0 for best results
+3. ✅ Works on any viewport size (mobile-responsive)
 
 ---
 
@@ -348,24 +355,25 @@ const chat = BeautifulFlowiseChat.init(config);
 
 | Feature | Beautiful Flowise | Default Embed |
 |---------|------------------|---------------|
-| Smooth Streaming | ✅ PRIMUS-V2 engine | ❌ Basic |
-| Loading Animation | ✅ Pulsing dots | ❌ None |
-| Markdown Formatting | ✅ Full support | ⚠️ Limited |
-| Themes | ✅ 7 professional | ❌ 1 basic |
-| Custom Colors | ✅ Any color | ⚠️ Limited |
-| Mobile Responsive | ✅ Optimized | ⚠️ Basic |
-| Code Highlighting | ✅ Yes | ❌ No |
-| Bubble Design | ✅ Modern | ⚠️ Basic |
-| No Avatars | ✅ Clean | ❌ Always shown |
-| Production Ready | ✅ Battle-tested | ⚠️ Basic |
+| **Modes** | ✅ Popup + Full-screen | ⚠️ Popup only |
+| **Memory** | ✅ Perfect (chatId) | ⚠️ Basic |
+| **Smooth Streaming** | ✅ PRIMUS-V2 | ❌ Basic |
+| **Loading Animation** | ✅ Pulsing dots | ❌ None |
+| **Markdown** | ✅ Full support | ⚠️ Limited |
+| **Themes** | ✅ 7 professional | ❌ 1 basic |
+| **Custom Colors** | ✅ Any color | ⚠️ Limited |
+| **Mobile** | ✅ Optimized | ⚠️ Basic |
+| **Code Highlighting** | ✅ Yes | ❌ No |
+| **Clean Design** | ✅ Modern | ⚠️ Basic |
+| **Production Ready** | ✅ Battle-tested | ⚠️ Basic |
 
 ---
 
 ## 📦 CDN Versions
 
-### Latest (v1.4.2)
+### Latest (v1.6.0) - Recommended
 ```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@52bf600/dist/chat.js"></script>
 ```
 
 ### Always Latest (auto-updates)
@@ -373,20 +381,15 @@ const chat = BeautifulFlowiseChat.init(config);
 <script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@main/dist/chat.js"></script>
 ```
 
-### Specific Version (recommended for production)
-```html
-<script src="https://cdn.jsdelivr.net/gh/unknownfriend00007/beautiful-flowise-chat@7460bcf/dist/chat.js"></script>
-```
-
 ---
 
-## 🧪 Test Page
+## 🧪 Live Demos
 
-Want to try before implementing? Check out our interactive test page:
+### Popup Demo
+👉 [**View Popup Demo**](https://htmlpreview.github.io/?https://github.com/unknownfriend00007/beautiful-flowise-chat/blob/main/examples/popup-demo.html)
 
-👉 [**Live Demo**](https://raw.githubusercontent.com/unknownfriend00007/beautiful-flowise-chat/main/test-themes.html)
-
-*Download and open in browser to test all themes!*
+### Full-Screen Demo  
+👉 [**View Full-Screen Demo**](https://htmlpreview.github.io/?https://github.com/unknownfriend00007/beautiful-flowise-chat/blob/main/examples/fullscreen-demo.html)
 
 ---
 
@@ -403,42 +406,36 @@ Contributions welcome! Please:
 
 ## 📝 Changelog
 
-### v1.4.2 (Latest)
+### v1.6.0 (Latest) - 2025-12-30
+- 🎯 **Dual-mode support** - Popup and Full-screen modes
+- 🪟 `init()` for popup mode
+- 📺 `initFull()` for full-screen mode
+- 🎨 Same features in both modes
+- 📱 Mobile-responsive full-screen
+
+### v1.5.1 - 2025-12-30
+- 🧠 **Perfect Memory** - Chat ID at root level
+- 🔍 **Flowise UI Visible** - Sessions show in dashboard
+- 🎲 **UUID Format** - Standard session format
+- 💾 **Session Persistence** - Bot remembers context
+
+### v1.5.0 - 2025-12-29
+- 📍 **User Message Alignment** - Fixed right-alignment
+- 🎨 **Width Fix** - Messages display properly
+- ✅ **justify-content** - Proper flex alignment
+
+### v1.4.2
 - ➕ Added "Powered by RPS" branding with mailto link
 - 🎨 Hover effect on footer link
 
 ### v1.4.1
 - ✨ Added pulsing loading dots animation
 - 🎯 Dots appear immediately when message sent
-- 🌊 Smooth transition to streaming text
 
 ### v1.4.0
-- 🚀 PRIMUS-V2 streaming engine implemented
-- 💫 Buttery smooth character-by-character updates
-- 🎯 Pre-created placeholder messages
+- 🚀 PRIMUS-V2 streaming engine
+- 💫 Buttery smooth updates
 - 🛡️ Smart buffer handling
-- 💪 Auto-fallback system
-
-### v1.3.2
-- 🚫 Removed avatars from messages
-- 📝 Fixed markdown header formatting (### hidden)
-- 🎨 Better spacing and layout
-
-### v1.3.1
-- 🐛 Fixed blank bubble issue
-- ✨ Message appears only when first token arrives
-- 🎨 Improved streaming flow
-
-### v1.3.0
-- ⚡ Streaming now works perfectly
-- 📝 Markdown formatting for all responses
-- 👀 User messages now visible
-- 🔧 Auto-fallback to non-streaming
-
-### v1.1.2
-- 🐛 Fixed streaming cursor
-- 📝 Added markdown support
-- ✨ Improved formatting
 
 ---
 
@@ -454,7 +451,8 @@ Copyright (c) 2025 RPS
 
 - 📧 [Contact RPS](mailto:mail.rps.active@proton.me)
 - 🐙 [GitHub Repository](https://github.com/unknownfriend00007/beautiful-flowise-chat)
-- 🧪 [Test Page](https://raw.githubusercontent.com/unknownfriend00007/beautiful-flowise-chat/main/test-themes.html)
+- 🧪 [Popup Demo](https://htmlpreview.github.io/?https://github.com/unknownfriend00007/beautiful-flowise-chat/blob/main/examples/popup-demo.html)
+- 📺 [Full-Screen Demo](https://htmlpreview.github.io/?https://github.com/unknownfriend00007/beautiful-flowise-chat/blob/main/examples/fullscreen-demo.html)
 - 🐛 [Report Issues](https://github.com/unknownfriend00007/beautiful-flowise-chat/issues)
 - 💡 [Request Features](https://github.com/unknownfriend00007/beautiful-flowise-chat/issues/new)
 
@@ -462,10 +460,11 @@ Copyright (c) 2025 RPS
 
 ## 💖 Credits
 
-**Created by RPS** with inspiration from:
+**Created by RPS** with:
 - 🚀 PRIMUS-V2 streaming architecture
-- 🎨 Modern UI/UX principles
+- 🎨 Modern UI/UX principles  
 - 💬 Real-world production requirements
+- 🧠 Proper Flowise API implementation
 
 ---
 
