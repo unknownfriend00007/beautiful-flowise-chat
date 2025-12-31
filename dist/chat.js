@@ -1,39 +1,49 @@
 /**
- * Beautiful Flowise Chat Widget v2.0.5
- * Ultra-Smooth Streaming Optimization
+ * Beautiful Flowise Chat Widget v2.1.0-beta
+ * Primus V2-Inspired Formatting Update
  * 
- * v2.0.5 Performance Update:
- * - Optimized streaming batch interval (16ms → 50ms)
- * - Added 3-character threshold before UI updates
- * - Smart scrolling (only when user is near bottom)
- * - GPU-accelerated cursor animation
+ * v2.1.0-beta New Features:
+ * - Integrated marked.js for superior markdown parsing
+ * - Added DOMPurify for XSS protection
+ * - Primus V2-style layout (bot: 95%, user: 60% max)
+ * - Native table support with responsive styling
+ * - Enhanced code block rendering with syntax preservation
+ * - Format markdown ONLY on final render (not during streaming)
+ * 
+ * v2.0.5 Performance:
+ * - Ultra-smooth streaming (50ms batch interval)
+ * - Smart scrolling and GPU-accelerated cursor
  * - Reduced CPU usage by ~40%
  * 
- * v2.0.4 Critical Fix:
- * - Fixed numbered lists rendering as bullets
- * - Added proper list type detection (<ol> vs <ul>)
- * 
- * v2.0.3 Critical Fixes:
- * - Fixed code blocks being mangled by markdown processors
- * - Added hex shorthand support (#fff, #000, etc.)
- * 
- * v2.0.2 Hotfix:
- * - Fixed bold placeholder conflict with italic regex
- * - Reduced streaming lag from 50ms to 16ms (60fps)
- * 
  * Security & Performance:
- * - XSS protection for markdown links
+ * - XSS protection via DOMPurify
  * - Request abortion and timeout handling
  * - LocalStorage growth capping
- * - Duplicate widget prevention
- * - Batched streaming updates
  * - Memory leak prevention
  * 
- * Created by RPS
+ * Created by RPS | Inspired by Primus V2
  */
 
 (function() {
     'use strict';
+
+    // Load marked.js and DOMPurify from CDN
+    const loadLibrary = (src, name) => {
+        return new Promise((resolve, reject) => {
+            if (window[name]) {
+                resolve(window[name]);
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => resolve(window[name]);
+            script.onerror = () => reject(new Error(`Failed to load ${name}`));
+            document.head.appendChild(script);
+        });
+    };
+
+    const MARKED_CDN = 'https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js';
+    const DOMPURIFY_CDN = 'https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js';
 
     const defaults = {
         theme: 'modern',
@@ -69,11 +79,7 @@
         STREAM_MIN_CHARS: 3,
         MAX_INPUT_HEIGHT: 120,
         MIN_REQUEST_INTERVAL: 500,
-        ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:'],
-        BOLD_PLACEHOLDER_START: '{{BFBOLDSTART}}',
-        BOLD_PLACEHOLDER_END: '{{BFBOLDEND}}',
-        CODE_BLOCK_PLACEHOLDER: '{{BFCODEBLOCK_',
-        INLINE_CODE_PLACEHOLDER: '{{BFINLINECODE_'
+        ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:']
     };
 
     const styles = `
@@ -292,14 +298,17 @@
     padding: 0 !important;
 }
 
+/* Primus V2-style layout */
 .bf-bot-message .bf-message-content {
     align-items: flex-start !important;
-    max-width: 85% !important;
+    max-width: 95% !important;
+    width: 100% !important;
 }
 
 .bf-user-message .bf-message-content {
     align-items: flex-end !important;
     max-width: 60% !important;
+    width: fit-content !important;
 }
 
 .bf-message-text {
@@ -323,6 +332,7 @@
     background: white;
     color: #1f2937;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    width: 100% !important;
 }
 
 .bf-user-message .bf-message-text {
@@ -330,6 +340,7 @@
     color: var(--bf-custom-user-msg-text) !important;
     border: none !important;
     box-shadow: none !important;
+    width: fit-content !important;
 }
 
 .bf-message-time {
@@ -339,10 +350,24 @@
     padding: 0 4px;
 }
 
-.bf-bot-message .bf-message-text p { margin: 0 0 10px 0; }
-.bf-bot-message .bf-message-text p:last-child { margin-bottom: 0; }
-.bf-bot-message .bf-message-text strong { font-weight: 600; color: #111827; }
-.bf-bot-message .bf-message-text em { font-style: italic; }
+/* Primus V2-inspired content styling */
+.bf-bot-message .bf-message-text p { 
+    margin: 0 0 10px 0; 
+}
+
+.bf-bot-message .bf-message-text p:last-child { 
+    margin-bottom: 0; 
+}
+
+.bf-bot-message .bf-message-text strong { 
+    font-weight: 600; 
+    color: #111827; 
+}
+
+.bf-bot-message .bf-message-text em { 
+    font-style: italic; 
+}
+
 .bf-bot-message .bf-message-text code {
     background: #f3f4f6;
     padding: 3px 7px;
@@ -351,6 +376,7 @@
     font-size: 13px;
     color: #be123c;
 }
+
 .bf-bot-message .bf-message-text pre {
     background: #1f2937;
     color: #f9fafb;
@@ -359,21 +385,37 @@
     overflow-x: auto;
     margin: 10px 0;
 }
+
 .bf-bot-message .bf-message-text pre code {
     background: transparent;
     color: #f9fafb;
     padding: 0;
 }
+
 .bf-bot-message .bf-message-text ul,
 .bf-bot-message .bf-message-text ol {
     margin: 10px 0;
     padding-left: 24px;
 }
-.bf-bot-message .bf-message-text li { margin: 6px 0; line-height: 1.5; }
+
+.bf-bot-message .bf-message-text ul {
+    list-style-type: disc;
+}
+
+.bf-bot-message .bf-message-text ol {
+    list-style-type: decimal;
+}
+
+.bf-bot-message .bf-message-text li { 
+    margin: 6px 0; 
+    line-height: 1.5; 
+}
+
 .bf-bot-message .bf-message-text a {
     color: var(--bf-primary-color);
     text-decoration: underline;
 }
+
 .bf-bot-message .bf-message-text h1,
 .bf-bot-message .bf-message-text h2,
 .bf-bot-message .bf-message-text h3 {
@@ -382,9 +424,43 @@
     margin: 14px 0 8px 0;
     line-height: 1.3;
 }
+
 .bf-bot-message .bf-message-text h1 { font-size: 18px; }
 .bf-bot-message .bf-message-text h2 { font-size: 16px; }
 .bf-bot-message .bf-message-text h3 { font-size: 15px; }
+
+/* Table styling (Primus V2) */
+.bf-bot-message .bf-message-text table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    display: block;
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+}
+
+.bf-bot-message .bf-message-text th,
+.bf-bot-message .bf-message-text td {
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.bf-bot-message .bf-message-text thead th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: #111827;
+}
+
+.bf-bot-message .bf-message-text tbody tr:nth-child(odd) {
+    background: white;
+}
+
+.bf-bot-message .bf-message-text tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
 
 .bf-loading-dots {
     display: flex;
@@ -557,6 +633,20 @@
 }
 .bf-theme-dark .bf-branding { color: #9ca3af; }
 .bf-theme-dark .bf-message-time { color: #9ca3af; }
+.bf-theme-dark .bf-bot-message .bf-message-text table thead th {
+    background: #4b5563;
+    color: #f9fafb;
+}
+.bf-theme-dark .bf-bot-message .bf-message-text table tbody tr:nth-child(odd) {
+    background: #374151;
+}
+.bf-theme-dark .bf-bot-message .bf-message-text table tbody tr:nth-child(even) {
+    background: #4b5563;
+}
+.bf-theme-dark .bf-bot-message .bf-message-text table th,
+.bf-theme-dark .bf-bot-message .bf-message-text table td {
+    border-color: #4b5563;
+}
 
 .bf-theme-minimal { 
     --bf-primary-color: #000000; 
@@ -643,14 +733,42 @@
             
             this.eventListeners = [];
             
+            // Will be populated after libraries load
+            this.marked = null;
+            this.DOMPurify = null;
+            
             this.init();
         }
 
-        init() {
+        async init() {
             const existing = document.getElementById('beautiful-flowise-container');
             if (existing) {
                 this.log('Removing existing widget instance');
                 existing.remove();
+            }
+            
+            // Load markdown libraries
+            try {
+                await Promise.all([
+                    loadLibrary(MARKED_CDN, 'marked'),
+                    loadLibrary(DOMPURIFY_CDN, 'DOMPurify')
+                ]);
+                this.marked = window.marked;
+                this.DOMPurify = window.DOMPurify;
+                
+                // Configure marked for GFM (GitHub Flavored Markdown)
+                if (this.marked && this.marked.setOptions) {
+                    this.marked.setOptions({
+                        breaks: true,
+                        gfm: true,
+                        headerIds: false,
+                        mangle: false
+                    });
+                }
+                
+                this.log('Markdown libraries loaded successfully');
+            } catch (error) {
+                this.log('Warning: Failed to load markdown libraries, falling back to basic formatting');
             }
             
             this.injectStyles();
@@ -1324,6 +1442,7 @@
             const textElement = messageDiv.querySelector('.bf-message-text');
             
             if (isStreaming) {
+                // During streaming: plain text + cursor (Primus V2 approach)
                 textElement.textContent = text;
                 const cursor = document.createElement('span');
                 cursor.className = 'bf-cursor';
@@ -1331,6 +1450,7 @@
                 messageDiv.classList.add('bf-streaming');
                 this.smartScroll();
             } else {
+                // After streaming: format markdown ONCE (Primus V2 approach)
                 textElement.innerHTML = this.formatMarkdown(text);
                 messageDiv.classList.remove('bf-streaming');
                 this.scrollToBottom();
@@ -1358,36 +1478,41 @@
         formatMarkdown(text) {
             if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\n/g, '<br>');
             
+            // Use marked.js if available (Primus V2 approach)
+            if (this.marked && this.DOMPurify) {
+                try {
+                    const rawHtml = this.marked.parse(text);
+                    const sanitizedHtml = this.DOMPurify.sanitize(rawHtml);
+                    return sanitizedHtml;
+                } catch (error) {
+                    this.log('Markdown parsing error, falling back:', error);
+                    // Fall through to basic formatting
+                }
+            }
+            
+            // Fallback: basic formatting (v2.0.5 approach)
             let html = this.escapeHtml(text);
             
-            const codeBlocks = [];
-            const inlineCodes = [];
-            
-            html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
-                const index = codeBlocks.length;
-                codeBlocks.push(code);
-                return CONSTANTS.CODE_BLOCK_PLACEHOLDER + index + '}}';
-            });
-            
-            html = html.replace(/`([^`]+)`/g, (match, code) => {
-                const index = inlineCodes.length;
-                inlineCodes.push(code);
-                return CONSTANTS.INLINE_CODE_PLACEHOLDER + index + '}}';
-            });
-            
+            // Headers
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
             
-            html = html.replace(/\*\*(.+?)\*\*/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
-            html = html.replace(/__(.+?)__/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
+            // Bold
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
             
+            // Italic
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
             
-            html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_START, 'g'), '<strong>');
-            html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_END, 'g'), '</strong>');
+            // Code blocks
+            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
             
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Links
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
                 try {
                     const urlObj = new URL(url, window.location.href);
@@ -1400,32 +1525,26 @@
                 }
             });
             
+            // Lists
             html = html.replace(/^\d+\.\s+(.+)$/gm, '<li data-list="ol">$1</li>');
             html = html.replace(/^[\-\*]\s+(.+)$/gm, '<li data-list="ul">$1</li>');
-            
             html = html.replace(/(<li[^>]*>.+?<\/li>(?:\n<li[^>]*>.+?<\/li>)*)/g, (match) => {
                 const listType = match.includes('data-list="ol"') ? 'ol' : 'ul';
                 const cleaned = match.replace(/ data-list="[^"]+"/g, '');
                 return `<${listType}>${cleaned}</${listType}>`;
             });
             
+            // Paragraphs
             html = html.replace(/\n\n/g, '</p><p>');
             html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
-            
             html = html.replace(/<p><\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
             html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
             html = html.replace(/<p>(<h[123]>)/g, '$1');
             html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
-            
-            html = html.replace(new RegExp(CONSTANTS.INLINE_CODE_PLACEHOLDER + '(\\d+)}', 'g'), (match, index) => {
-                return `<code>${inlineCodes[parseInt(index)]}</code>`;
-            });
-            
-            html = html.replace(new RegExp(CONSTANTS.CODE_BLOCK_PLACEHOLDER + '(\\d+)}}', 'g'), (match, index) => {
-                return `<pre><code>${codeBlocks[parseInt(index)]}</code></pre>`;
-            });
+            html = html.replace(/<p>(<pre>)/g, '$1');
+            html = html.replace(/(<\/pre>)<\/p>/g, '$1');
             
             return html;
         }
