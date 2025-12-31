@@ -1,12 +1,14 @@
 /**
- * Beautiful Flowise Chat Widget v2.1.0-rc2
- * True Real-Time Formatting Fix
+ * Beautiful Flowise Chat Widget v2.1.0-rc3
+ * Send Button Fix
  * 
- * v2.1.0-rc2 Critical Fixes:
+ * v2.1.0-rc3:
+ * - Fixed send button Unicode rendering issue
+ * 
+ * v2.1.0-rc2:
  * - Removed excessive paragraph spacing (Primus V2 style)
  * - Format markdown on EVERY render (no aggressive caching)
  * - Compact line-height and spacing
- * - Fixed white-space handling
  * 
  * v2.1.0-rc1:
  * - Real-time markdown formatting during streaming
@@ -52,7 +54,7 @@
         subtitle: 'Online',
         welcomeMessage: 'Hi! How can I help you today?',
         placeholder: 'Type your message...',
-        sendButtonText: '\\u27a4',
+        sendButtonText: '➤',
         showTimestamp: true,
         enableStreaming: true,
         enableMarkdown: true,
@@ -61,7 +63,7 @@
         maxMessages: 100,
         requestTimeout: 30000,
         debug: false,
-        avatar: '\\ud83e\\udd16',
+        avatar: '🤖',
         mode: 'popup',
         customUserMessageBg: null,
         customUserMessageText: null,
@@ -1055,7 +1057,7 @@
                                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                                 </svg>
                             </button>
-                            <button class="bf-minimize-btn" id="bf-minimize">\u2212</button>
+                            <button class="bf-minimize-btn" id="bf-minimize">−</button>
                         </div>
                     </div>
                     <div class="bf-messages" id="bf-messages"></div>
@@ -1192,7 +1194,7 @@
                     const elem = document.getElementById(botMessageId);
                     if (elem) elem.remove();
                     this.addMessage(
-                        "I'm having trouble connecting. Please try again. \ud83d\udd04",
+                        "I'm having trouble connecting. Please try again. 🔄",
                         'bot'
                     );
                 }
