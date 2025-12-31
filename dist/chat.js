@@ -1,25 +1,23 @@
 /**
- * Beautiful Flowise Chat Widget v2.1.0-beta
- * Primus V2-Inspired Formatting Update
+ * Beautiful Flowise Chat Widget v2.1.0-rc1
+ * Real-Time Markdown Formatting (Primus V2 Style)
  * 
- * v2.1.0-beta New Features:
+ * v2.1.0-rc1 Critical Fix:
+ * - Format markdown DURING streaming (not after)
+ * - Batched formatting updates every 50ms
+ * - Cache formatted output to prevent re-parsing
+ * - Maintains smooth 50ms streaming interval
+ * 
+ * v2.1.0-beta:
  * - Integrated marked.js for superior markdown parsing
  * - Added DOMPurify for XSS protection
  * - Primus V2-style layout (bot: 95%, user: 60% max)
  * - Native table support with responsive styling
- * - Enhanced code block rendering with syntax preservation
- * - Format markdown ONLY on final render (not during streaming)
  * 
  * v2.0.5 Performance:
  * - Ultra-smooth streaming (50ms batch interval)
  * - Smart scrolling and GPU-accelerated cursor
  * - Reduced CPU usage by ~40%
- * 
- * Security & Performance:
- * - XSS protection via DOMPurify
- * - Request abortion and timeout handling
- * - LocalStorage growth capping
- * - Memory leak prevention
  * 
  * Created by RPS | Inspired by Primus V2
  */
@@ -56,7 +54,7 @@
         subtitle: 'Online',
         welcomeMessage: 'Hi! How can I help you today?',
         placeholder: 'Type your message...',
-        sendButtonText: '\u27a4',
+        sendButtonText: '\\u27a4',
         showTimestamp: true,
         enableStreaming: true,
         enableMarkdown: true,
@@ -65,7 +63,7 @@
         maxMessages: 100,
         requestTimeout: 30000,
         debug: false,
-        avatar: '\ud83e\udd16',
+        avatar: '\\ud83e\\udd16',
         mode: 'popup',
         customUserMessageBg: null,
         customUserMessageText: null,
@@ -320,7 +318,7 @@
     overflow-wrap: break-word;
     word-break: keep-all;
     hyphens: none;
-    white-space: pre-wrap;
+    white-space: normal;
     display: inline-block !important;
     width: fit-content !important;
     max-width: 100% !important;
@@ -341,6 +339,7 @@
     border: none !important;
     box-shadow: none !important;
     width: fit-content !important;
+    white-space: pre-wrap;
 }
 
 .bf-message-time {
@@ -726,6 +725,10 @@
             this.streamUpdateTimer = null;
             this.streamCharCount = 0;
             this.firstTokenReceived = false;
+            
+            // NEW: Cache for formatted markdown
+            this.formattedCache = '';
+            this.lastFormattedLength = 0;
             
             this.abortController = null;
             this.isSending = false;
@@ -1163,6 +1166,10 @@
             this.currentStreamingMessageId = botMessageId;
             this.firstTokenReceived = false;
             
+            // Reset formatting cache
+            this.formattedCache = '';
+            this.lastFormattedLength = 0;
+            
             this.abortController = new AbortController();
 
             try {
@@ -1265,6 +1272,7 @@
                     this.streamUpdateTimer = setTimeout(() => {
                         const charDiff = this.streamBuffer.length - this.streamLastUpdate.length;
                         
+                        // Update DURING streaming with markdown formatting (Primus V2 style)
                         if (charDiff >= CONSTANTS.STREAM_MIN_CHARS || !this.firstTokenReceived) {
                             this.updatePlaceholderMessage(botMessageId, this.streamBuffer, true);
                             this.streamLastUpdate = this.streamBuffer;
@@ -1337,6 +1345,7 @@
                 }
                 
                 if (this.streamBuffer) {
+                    // Final update - same as streaming
                     this.updatePlaceholderMessage(botMessageId, this.streamBuffer, false);
                     this.addMessageToStorage(this.streamBuffer, 'bot');
                     this.streamBuffer = '';
@@ -1441,19 +1450,49 @@
 
             const textElement = messageDiv.querySelector('.bf-message-text');
             
-            if (isStreaming) {
-                // During streaming: plain text + cursor (Primus V2 approach)
-                textElement.textContent = text;
-                const cursor = document.createElement('span');
-                cursor.className = 'bf-cursor';
-                textElement.appendChild(cursor);
-                messageDiv.classList.add('bf-streaming');
-                this.smartScroll();
+            // PRIMUS V2 APPROACH: Format markdown during AND after streaming
+            // Only re-parse if content has grown significantly (performance optimization)
+            if (this.marked && this.DOMPurify && this.config.enableMarkdown) {
+                const needsReformat = text.length - this.lastFormattedLength > 10 || !isStreaming;
+                
+                if (needsReformat) {
+                    try {
+                        const rawHtml = this.marked.parse(text);
+                        this.formattedCache = this.DOMPurify.sanitize(rawHtml);
+                        this.lastFormattedLength = text.length;
+                    } catch (e) {
+                        this.log('Markdown parse error:', e);
+                        this.formattedCache = this.escapeHtml(text).replace(/\n/g, '<br>');
+                    }
+                }
+                
+                textElement.innerHTML = this.formattedCache;
+                
+                if (isStreaming) {
+                    // Add cursor at the end
+                    const cursor = document.createElement('span');
+                    cursor.className = 'bf-cursor';
+                    textElement.appendChild(cursor);
+                    messageDiv.classList.add('bf-streaming');
+                    this.smartScroll();
+                } else {
+                    messageDiv.classList.remove('bf-streaming');
+                    this.scrollToBottom();
+                }
             } else {
-                // After streaming: format markdown ONCE (Primus V2 approach)
-                textElement.innerHTML = this.formatMarkdown(text);
-                messageDiv.classList.remove('bf-streaming');
-                this.scrollToBottom();
+                // Fallback: basic formatting
+                if (isStreaming) {
+                    textElement.textContent = text;
+                    const cursor = document.createElement('span');
+                    cursor.className = 'bf-cursor';
+                    textElement.appendChild(cursor);
+                    messageDiv.classList.add('bf-streaming');
+                    this.smartScroll();
+                } else {
+                    textElement.innerHTML = this.formatMarkdown(text);
+                    messageDiv.classList.remove('bf-streaming');
+                    this.scrollToBottom();
+                }
             }
         }
 
