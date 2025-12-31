@@ -1,6 +1,10 @@
 /**
- * Beautiful Flowise Chat Widget v2.1.0-rc3
- * Send Button Fix
+ * Beautiful Flowise Chat Widget v2.1.0-rc4
+ * Font Size Improvements
+ * 
+ * v2.1.0-rc4:
+ * - Increased font sizes to match Perplexity (15px base)
+ * - Better readability on desktop and mobile
  * 
  * v2.1.0-rc3:
  * - Fixed send button Unicode rendering issue
@@ -312,8 +316,8 @@
 .bf-message-text {
     padding: 12px 16px !important;
     border-radius: 16px;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 15px;
+    line-height: 1.6;
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: keep-all;
@@ -349,9 +353,9 @@
     padding: 0 4px;
 }
 
-/* Primus V2-inspired COMPACT content styling (KEY FIX) */
+/* Perplexity-style COMPACT content styling with better readability */
 .bf-bot-message .bf-message-text p { 
-    margin: 0 0 8px 0;
+    margin: 0 0 10px 0;
 }
 
 .bf-bot-message .bf-message-text p:last-child { 
@@ -376,7 +380,7 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
-    font-size: 13px;
+    font-size: 14px;
     color: #be123c;
 }
 
@@ -386,18 +390,19 @@
     padding: 12px;
     border-radius: 8px;
     overflow-x: auto;
-    margin: 8px 0;
+    margin: 10px 0;
 }
 
 .bf-bot-message .bf-message-text pre code {
     background: transparent;
     color: #f9fafb;
     padding: 0;
+    font-size: 14px;
 }
 
 .bf-bot-message .bf-message-text ul,
 .bf-bot-message .bf-message-text ol {
-    margin: 8px 0;
+    margin: 10px 0;
     padding-left: 24px;
 }
 
@@ -410,8 +415,8 @@
 }
 
 .bf-bot-message .bf-message-text li { 
-    margin: 4px 0;
-    line-height: 1.5; 
+    margin: 5px 0;
+    line-height: 1.6; 
 }
 
 .bf-bot-message .bf-message-text a {
@@ -424,8 +429,8 @@
 .bf-bot-message .bf-message-text h3 {
     font-weight: 600;
     color: #111827;
-    margin: 12px 0 8px 0;
-    line-height: 1.3;
+    margin: 14px 0 10px 0;
+    line-height: 1.4;
 }
 
 .bf-bot-message .bf-message-text h1:first-child,
@@ -434,17 +439,17 @@
     margin-top: 0;
 }
 
-.bf-bot-message .bf-message-text h1 { font-size: 18px; }
-.bf-bot-message .bf-message-text h2 { font-size: 16px; }
-.bf-bot-message .bf-message-text h3 { font-size: 15px; }
+.bf-bot-message .bf-message-text h1 { font-size: 20px; }
+.bf-bot-message .bf-message-text h2 { font-size: 18px; }
+.bf-bot-message .bf-message-text h3 { font-size: 16px; }
 
-/* Table styling (Primus V2) */
+/* Table styling (Perplexity-sized) */
 .bf-bot-message .bf-message-text table {
     width: 100%;
     border-collapse: collapse;
-    margin: 10px 0;
-    font-size: 13px;
-    line-height: 1.4;
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.5;
     display: block;
     overflow-x: auto;
     border: 1px solid #e5e7eb;
@@ -453,7 +458,7 @@
 .bf-bot-message .bf-message-text th,
 .bf-bot-message .bf-message-text td {
     border: 1px solid #e5e7eb;
-    padding: 8px 12px;
+    padding: 10px 12px;
     text-align: left;
 }
 
@@ -533,7 +538,7 @@
     border: 2px solid #e5e7eb;
     border-radius: 12px;
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: 15px;
     font-family: inherit;
     resize: none;
     outline: none;
@@ -541,6 +546,7 @@
     max-height: 120px;
     min-height: 44px;
     color: #1f2937;
+    line-height: 1.5;
 }
 
 .bf-input:focus { border-color: var(--bf-primary-color); }
