@@ -1,12 +1,6 @@
 /**
- * Beautiful Flowise Chat Widget v2.0.6
- * Real-Time Formatting & Perfect Centering
- * 
- * v2.0.6 Critical UX Fixes:
- * - Real-time markdown formatting during streaming (not just after completion)
- * - Perfect message width & centering (bot 85%, user 60%)
- * - Instant formatting feedback (bold, italic, code blocks)
- * - Better visual hierarchy and readability
+ * Beautiful Flowise Chat Widget v2.0.5
+ * Ultra-Smooth Streaming Optimization
  * 
  * v2.0.5 Performance Update:
  * - Optimized streaming batch interval (16ms → 50ms)
@@ -52,7 +46,7 @@
         subtitle: 'Online',
         welcomeMessage: 'Hi! How can I help you today?',
         placeholder: 'Type your message...',
-        sendButtonText: '\\u27a4',
+        sendButtonText: '\u27a4',
         showTimestamp: true,
         enableStreaming: true,
         enableMarkdown: true,
@@ -61,7 +55,7 @@
         maxMessages: 100,
         requestTimeout: 30000,
         debug: false,
-        avatar: '\\ud83e\\udd16',
+        avatar: '\ud83e\udd16',
         mode: 'popup',
         customUserMessageBg: null,
         customUserMessageText: null,
@@ -704,7 +698,7 @@
                 return this.darkenHex(color);
             }
             
-            const rgbMatch = color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)(?:,\\s*([\\d.]+))?\\)/);
+            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
             if (rgbMatch) {
                 const [, r, g, b, a] = rgbMatch;
                 const darkR = Math.max(0, Math.floor(parseInt(r) * 0.8));
@@ -735,7 +729,7 @@
         colorToRgba(color, alpha) {
             if (!color) return `rgba(99, 102, 241, ${alpha})`;
             
-            const rgbMatch = color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
+            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
             if (rgbMatch) {
                 const [, r, g, b] = rgbMatch;
                 return `rgba(${r}, ${g}, ${b}, ${alpha})`;
@@ -933,7 +927,7 @@
                                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                                 </svg>
                             </button>
-                            <button class="bf-minimize-btn" id="bf-minimize">\\u2212</button>
+                            <button class="bf-minimize-btn" id="bf-minimize">\u2212</button>
                         </div>
                     </div>
                     <div class="bf-messages" id="bf-messages"></div>
@@ -1067,7 +1061,7 @@
                     const elem = document.getElementById(botMessageId);
                     if (elem) elem.remove();
                     this.addMessage(
-                        "I'm having trouble connecting. Please try again. \\ud83d\\udd04",
+                        "I'm having trouble connecting. Please try again. \ud83d\udd04",
                         'bot'
                     );
                 }
@@ -1169,7 +1163,7 @@
 
                     buffer += decoder.decode(value, { stream: true });
                     
-                    const lines = buffer.split('\\n');
+                    const lines = buffer.split('\n');
                     buffer = lines.pop() || '';
                     
                     for (const line of lines) {
@@ -1177,7 +1171,7 @@
                         if (!trimmed || trimmed.startsWith(':') || !trimmed.startsWith('data:')) continue;
 
                         const payload = trimmed.slice(5).trim();
-                        if (payload === '[DONE]' || payload === '\"[DONE]\"') continue;
+                        if (payload === '[DONE]' || payload === '"[DONE]"') continue;
 
                         let token = '';
                         let metadata = null;
@@ -1194,7 +1188,7 @@
                                 }
                             }
                         } catch {
-                            if (payload.startsWith('\"') && payload.endsWith('\"')) {
+                            if (payload.startsWith('"') && payload.endsWith('"')) {
                                 try {
                                     token = JSON.parse(payload);
                                 } catch {
@@ -1330,13 +1324,13 @@
             const textElement = messageDiv.querySelector('.bf-message-text');
             
             if (isStreaming) {
-                // REAL-TIME FORMATTING: Apply markdown during streaming!
-                const formatted = this.formatMarkdown(text);
-                textElement.innerHTML = formatted + '<span class="bf-cursor"></span>';
+                textElement.textContent = text;
+                const cursor = document.createElement('span');
+                cursor.className = 'bf-cursor';
+                textElement.appendChild(cursor);
                 messageDiv.classList.add('bf-streaming');
                 this.smartScroll();
             } else {
-                // Final render
                 textElement.innerHTML = this.formatMarkdown(text);
                 messageDiv.classList.remove('bf-streaming');
                 this.scrollToBottom();
@@ -1362,14 +1356,14 @@
         }
 
         formatMarkdown(text) {
-            if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\\n/g, '<br>');
+            if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\n/g, '<br>');
             
             let html = this.escapeHtml(text);
             
             const codeBlocks = [];
             const inlineCodes = [];
             
-            html = html.replace(/```([\\s\\S]*?)```/g, (match, code) => {
+            html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
                 const index = codeBlocks.length;
                 codeBlocks.push(code);
                 return CONSTANTS.CODE_BLOCK_PLACEHOLDER + index + '}}';
@@ -1385,51 +1379,51 @@
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
             
-            html = html.replace(/\\*\\*(.+?)\\*\\*/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
+            html = html.replace(/\*\*(.+?)\*\*/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
             html = html.replace(/__(.+?)__/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
             
-            html = html.replace(/\\*(.+?)\\*/g, '<em>$1</em>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
             
             html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_START, 'g'), '<strong>');
             html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_END, 'g'), '</strong>');
             
-            html = html.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, (match, text, url) => {
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
                 try {
                     const urlObj = new URL(url, window.location.href);
                     if (!CONSTANTS.ALLOWED_URL_SCHEMES.includes(urlObj.protocol)) {
                         return match;
                     }
-                    return `<a href=\"${this.escapeHtml(url)}\" target=\"_blank\" rel=\"noopener noreferrer\">${text}</a>`;
+                    return `<a href="${this.escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
                 } catch {
                     return match;
                 }
             });
             
-            html = html.replace(/^\\d+\\.\\s+(.+)$/gm, '<li data-list=\"ol\">$1</li>');
-            html = html.replace(/^[\\-\\*]\\s+(.+)$/gm, '<li data-list=\"ul\">$1</li>');
+            html = html.replace(/^\d+\.\s+(.+)$/gm, '<li data-list="ol">$1</li>');
+            html = html.replace(/^[\-\*]\s+(.+)$/gm, '<li data-list="ul">$1</li>');
             
-            html = html.replace(/(<li[^>]*>.+?<\\/li>(?:\\n<li[^>]*>.+?<\\/li>)*)/g, (match) => {
-                const listType = match.includes('data-list=\"ol\"') ? 'ol' : 'ul';
-                const cleaned = match.replace(/ data-list=\"[^\"]+\"/g, '');
+            html = html.replace(/(<li[^>]*>.+?<\/li>(?:\n<li[^>]*>.+?<\/li>)*)/g, (match) => {
+                const listType = match.includes('data-list="ol"') ? 'ol' : 'ul';
+                const cleaned = match.replace(/ data-list="[^"]+"/g, '');
                 return `<${listType}>${cleaned}</${listType}>`;
             });
             
-            html = html.replace(/\\n\\n/g, '</p><p>');
-            html = html.replace(/\\n/g, '<br>');
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
             
-            html = html.replace(/<p><\\/p>/g, '');
+            html = html.replace(/<p><\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
-            html = html.replace(/(<\\/[uo]l>)<\\/p>/g, '$1');
+            html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
             html = html.replace(/<p>(<h[123]>)/g, '$1');
-            html = html.replace(/(<\\/h[123]>)<\\/p>/g, '$1');
+            html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
             
-            html = html.replace(new RegExp(CONSTANTS.INLINE_CODE_PLACEHOLDER + '(\\\\d+)}', 'g'), (match, index) => {
+            html = html.replace(new RegExp(CONSTANTS.INLINE_CODE_PLACEHOLDER + '(\\d+)}', 'g'), (match, index) => {
                 return `<code>${inlineCodes[parseInt(index)]}</code>`;
             });
             
-            html = html.replace(new RegExp(CONSTANTS.CODE_BLOCK_PLACEHOLDER + '(\\\\d+)}}', 'g'), (match, index) => {
+            html = html.replace(new RegExp(CONSTANTS.CODE_BLOCK_PLACEHOLDER + '(\\d+)}}', 'g'), (match, index) => {
                 return `<pre><code>${codeBlocks[parseInt(index)]}</code></pre>`;
             });
             
