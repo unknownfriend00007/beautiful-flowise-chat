@@ -1,39 +1,51 @@
 /**
- * Beautiful Flowise Chat Widget v2.0.5
- * Ultra-Smooth Streaming Optimization
+ * Beautiful Flowise Chat Widget v2.1.0-rc4
+ * Font Size Improvements
  * 
- * v2.0.5 Performance Update:
- * - Optimized streaming batch interval (16ms → 50ms)
- * - Added 3-character threshold before UI updates
- * - Smart scrolling (only when user is near bottom)
- * - GPU-accelerated cursor animation
- * - Reduced CPU usage by ~40%
+ * v2.1.0-rc4:
+ * - Increased font sizes to match Perplexity (15px base)
+ * - Better readability on desktop and mobile
  * 
- * v2.0.4 Critical Fix:
- * - Fixed numbered lists rendering as bullets
- * - Added proper list type detection (<ol> vs <ul>)
+ * v2.1.0-rc3:
+ * - Fixed send button Unicode rendering issue
  * 
- * v2.0.3 Critical Fixes:
- * - Fixed code blocks being mangled by markdown processors
- * - Added hex shorthand support (#fff, #000, etc.)
+ * v2.1.0-rc2:
+ * - Removed excessive paragraph spacing (Primus V2 style)
+ * - Format markdown on EVERY render (no aggressive caching)
+ * - Compact line-height and spacing
  * 
- * v2.0.2 Hotfix:
- * - Fixed bold placeholder conflict with italic regex
- * - Reduced streaming lag from 50ms to 16ms (60fps)
+ * v2.1.0-rc1:
+ * - Real-time markdown formatting during streaming
+ * - Batched updates every 50ms
  * 
- * Security & Performance:
- * - XSS protection for markdown links
- * - Request abortion and timeout handling
- * - LocalStorage growth capping
- * - Duplicate widget prevention
- * - Batched streaming updates
- * - Memory leak prevention
+ * v2.1.0-beta:
+ * - Integrated marked.js + DOMPurify
+ * - Primus V2-style layout (bot: 95%, user: 60% max)
+ * - Table support
  * 
- * Created by RPS
+ * Created by RPS | Inspired by Primus V2
  */
 
 (function() {
     'use strict';
+
+    // Load marked.js and DOMPurify from CDN
+    const loadLibrary = (src, name) => {
+        return new Promise((resolve, reject) => {
+            if (window[name]) {
+                resolve(window[name]);
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => resolve(window[name]);
+            script.onerror = () => reject(new Error(`Failed to load ${name}`));
+            document.head.appendChild(script);
+        });
+    };
+
+    const MARKED_CDN = 'https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js';
+    const DOMPURIFY_CDN = 'https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js';
 
     const defaults = {
         theme: 'modern',
@@ -46,7 +58,7 @@
         subtitle: 'Online',
         welcomeMessage: 'Hi! How can I help you today?',
         placeholder: 'Type your message...',
-        sendButtonText: '\u27a4',
+        sendButtonText: '➤',
         showTimestamp: true,
         enableStreaming: true,
         enableMarkdown: true,
@@ -55,7 +67,7 @@
         maxMessages: 100,
         requestTimeout: 30000,
         debug: false,
-        avatar: '\ud83e\udd16',
+        avatar: '🤖',
         mode: 'popup',
         customUserMessageBg: null,
         customUserMessageText: null,
@@ -69,11 +81,7 @@
         STREAM_MIN_CHARS: 3,
         MAX_INPUT_HEIGHT: 120,
         MIN_REQUEST_INTERVAL: 500,
-        ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:'],
-        BOLD_PLACEHOLDER_START: '{{BFBOLDSTART}}',
-        BOLD_PLACEHOLDER_END: '{{BFBOLDEND}}',
-        CODE_BLOCK_PLACEHOLDER: '{{BFCODEBLOCK_',
-        INLINE_CODE_PLACEHOLDER: '{{BFINLINECODE_'
+        ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:']
     };
 
     const styles = `
@@ -292,26 +300,29 @@
     padding: 0 !important;
 }
 
+/* Primus V2-style layout */
 .bf-bot-message .bf-message-content {
     align-items: flex-start !important;
-    max-width: 85% !important;
+    max-width: 95% !important;
+    width: 100% !important;
 }
 
 .bf-user-message .bf-message-content {
     align-items: flex-end !important;
     max-width: 60% !important;
+    width: fit-content !important;
 }
 
 .bf-message-text {
     padding: 12px 16px !important;
     border-radius: 16px;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.6;
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: keep-all;
     hyphens: none;
-    white-space: pre-wrap;
+    white-space: normal;
     display: inline-block !important;
     width: fit-content !important;
     max-width: 100% !important;
@@ -323,6 +334,7 @@
     background: white;
     color: #1f2937;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    width: 100% !important;
 }
 
 .bf-user-message .bf-message-text {
@@ -330,6 +342,8 @@
     color: var(--bf-custom-user-msg-text) !important;
     border: none !important;
     box-shadow: none !important;
+    width: fit-content !important;
+    white-space: pre-wrap;
 }
 
 .bf-message-time {
@@ -339,52 +353,128 @@
     padding: 0 4px;
 }
 
-.bf-bot-message .bf-message-text p { margin: 0 0 10px 0; }
-.bf-bot-message .bf-message-text p:last-child { margin-bottom: 0; }
-.bf-bot-message .bf-message-text strong { font-weight: 600; color: #111827; }
-.bf-bot-message .bf-message-text em { font-style: italic; }
+/* Perplexity-style COMPACT content styling with better readability */
+.bf-bot-message .bf-message-text p { 
+    margin: 0 0 10px 0;
+}
+
+.bf-bot-message .bf-message-text p:last-child { 
+    margin-bottom: 0; 
+}
+
+.bf-bot-message .bf-message-text p:only-child {
+    margin-bottom: 0;
+}
+
+.bf-bot-message .bf-message-text strong { 
+    font-weight: 600; 
+    color: #111827; 
+}
+
+.bf-bot-message .bf-message-text em { 
+    font-style: italic; 
+}
+
 .bf-bot-message .bf-message-text code {
     background: #f3f4f6;
-    padding: 3px 7px;
+    padding: 2px 6px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
-    font-size: 13px;
+    font-size: 14px;
     color: #be123c;
 }
+
 .bf-bot-message .bf-message-text pre {
     background: #1f2937;
     color: #f9fafb;
-    padding: 14px;
+    padding: 12px;
     border-radius: 8px;
     overflow-x: auto;
     margin: 10px 0;
 }
+
 .bf-bot-message .bf-message-text pre code {
     background: transparent;
     color: #f9fafb;
     padding: 0;
+    font-size: 14px;
 }
+
 .bf-bot-message .bf-message-text ul,
 .bf-bot-message .bf-message-text ol {
     margin: 10px 0;
     padding-left: 24px;
 }
-.bf-bot-message .bf-message-text li { margin: 6px 0; line-height: 1.5; }
+
+.bf-bot-message .bf-message-text ul {
+    list-style-type: disc;
+}
+
+.bf-bot-message .bf-message-text ol {
+    list-style-type: decimal;
+}
+
+.bf-bot-message .bf-message-text li { 
+    margin: 5px 0;
+    line-height: 1.6; 
+}
+
 .bf-bot-message .bf-message-text a {
     color: var(--bf-primary-color);
     text-decoration: underline;
 }
+
 .bf-bot-message .bf-message-text h1,
 .bf-bot-message .bf-message-text h2,
 .bf-bot-message .bf-message-text h3 {
     font-weight: 600;
     color: #111827;
-    margin: 14px 0 8px 0;
-    line-height: 1.3;
+    margin: 14px 0 10px 0;
+    line-height: 1.4;
 }
-.bf-bot-message .bf-message-text h1 { font-size: 18px; }
-.bf-bot-message .bf-message-text h2 { font-size: 16px; }
-.bf-bot-message .bf-message-text h3 { font-size: 15px; }
+
+.bf-bot-message .bf-message-text h1:first-child,
+.bf-bot-message .bf-message-text h2:first-child,
+.bf-bot-message .bf-message-text h3:first-child {
+    margin-top: 0;
+}
+
+.bf-bot-message .bf-message-text h1 { font-size: 20px; }
+.bf-bot-message .bf-message-text h2 { font-size: 18px; }
+.bf-bot-message .bf-message-text h3 { font-size: 16px; }
+
+/* Table styling (Perplexity-sized) */
+.bf-bot-message .bf-message-text table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    display: block;
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+}
+
+.bf-bot-message .bf-message-text th,
+.bf-bot-message .bf-message-text td {
+    border: 1px solid #e5e7eb;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+.bf-bot-message .bf-message-text thead th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: #111827;
+}
+
+.bf-bot-message .bf-message-text tbody tr:nth-child(odd) {
+    background: white;
+}
+
+.bf-bot-message .bf-message-text tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
 
 .bf-loading-dots {
     display: flex;
@@ -448,7 +538,7 @@
     border: 2px solid #e5e7eb;
     border-radius: 12px;
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: 15px;
     font-family: inherit;
     resize: none;
     outline: none;
@@ -456,6 +546,7 @@
     max-height: 120px;
     min-height: 44px;
     color: #1f2937;
+    line-height: 1.5;
 }
 
 .bf-input:focus { border-color: var(--bf-primary-color); }
@@ -557,6 +648,20 @@
 }
 .bf-theme-dark .bf-branding { color: #9ca3af; }
 .bf-theme-dark .bf-message-time { color: #9ca3af; }
+.bf-theme-dark .bf-bot-message .bf-message-text table thead th {
+    background: #4b5563;
+    color: #f9fafb;
+}
+.bf-theme-dark .bf-bot-message .bf-message-text table tbody tr:nth-child(odd) {
+    background: #374151;
+}
+.bf-theme-dark .bf-bot-message .bf-message-text table tbody tr:nth-child(even) {
+    background: #4b5563;
+}
+.bf-theme-dark .bf-bot-message .bf-message-text table th,
+.bf-theme-dark .bf-bot-message .bf-message-text table td {
+    border-color: #4b5563;
+}
 
 .bf-theme-minimal { 
     --bf-primary-color: #000000; 
@@ -637,20 +742,51 @@
             this.streamCharCount = 0;
             this.firstTokenReceived = false;
             
+            // Simplified: no aggressive caching
+            this.lastFormattedLength = 0;
+            
             this.abortController = null;
             this.isSending = false;
             this.lastRequestTime = 0;
             
             this.eventListeners = [];
             
+            // Will be populated after libraries load
+            this.marked = null;
+            this.DOMPurify = null;
+            
             this.init();
         }
 
-        init() {
+        async init() {
             const existing = document.getElementById('beautiful-flowise-container');
             if (existing) {
                 this.log('Removing existing widget instance');
                 existing.remove();
+            }
+            
+            // Load markdown libraries
+            try {
+                await Promise.all([
+                    loadLibrary(MARKED_CDN, 'marked'),
+                    loadLibrary(DOMPURIFY_CDN, 'DOMPurify')
+                ]);
+                this.marked = window.marked;
+                this.DOMPurify = window.DOMPurify;
+                
+                // Configure marked for GFM
+                if (this.marked && this.marked.setOptions) {
+                    this.marked.setOptions({
+                        breaks: true,
+                        gfm: true,
+                        headerIds: false,
+                        mangle: false
+                    });
+                }
+                
+                this.log('Markdown libraries loaded successfully');
+            } catch (error) {
+                this.log('Warning: Failed to load markdown libraries, falling back to basic formatting');
             }
             
             this.injectStyles();
@@ -927,7 +1063,7 @@
                                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                                 </svg>
                             </button>
-                            <button class="bf-minimize-btn" id="bf-minimize">\u2212</button>
+                            <button class="bf-minimize-btn" id="bf-minimize">−</button>
                         </div>
                     </div>
                     <div class="bf-messages" id="bf-messages"></div>
@@ -1045,6 +1181,9 @@
             this.currentStreamingMessageId = botMessageId;
             this.firstTokenReceived = false;
             
+            // Reset tracking
+            this.lastFormattedLength = 0;
+            
             this.abortController = new AbortController();
 
             try {
@@ -1061,7 +1200,7 @@
                     const elem = document.getElementById(botMessageId);
                     if (elem) elem.remove();
                     this.addMessage(
-                        "I'm having trouble connecting. Please try again. \ud83d\udd04",
+                        "I'm having trouble connecting. Please try again. 🔄",
                         'bot'
                     );
                 }
@@ -1147,6 +1286,7 @@
                     this.streamUpdateTimer = setTimeout(() => {
                         const charDiff = this.streamBuffer.length - this.streamLastUpdate.length;
                         
+                        // Update DURING streaming - EVERY TIME (no caching)
                         if (charDiff >= CONSTANTS.STREAM_MIN_CHARS || !this.firstTokenReceived) {
                             this.updatePlaceholderMessage(botMessageId, this.streamBuffer, true);
                             this.streamLastUpdate = this.streamBuffer;
@@ -1219,6 +1359,7 @@
                 }
                 
                 if (this.streamBuffer) {
+                    // Final update
                     this.updatePlaceholderMessage(botMessageId, this.streamBuffer, false);
                     this.addMessageToStorage(this.streamBuffer, 'bot');
                     this.streamBuffer = '';
@@ -1323,17 +1464,54 @@
 
             const textElement = messageDiv.querySelector('.bf-message-text');
             
-            if (isStreaming) {
-                textElement.textContent = text;
-                const cursor = document.createElement('span');
-                cursor.className = 'bf-cursor';
-                textElement.appendChild(cursor);
-                messageDiv.classList.add('bf-streaming');
-                this.smartScroll();
+            // TRUE REAL-TIME: Format markdown on EVERY render (with light threshold)
+            if (this.marked && this.DOMPurify && this.config.enableMarkdown) {
+                // Only re-parse if 5+ new characters OR final render
+                const needsReformat = text.length - this.lastFormattedLength >= 5 || !isStreaming;
+                
+                let formattedHtml;
+                if (needsReformat) {
+                    try {
+                        const rawHtml = this.marked.parse(text);
+                        formattedHtml = this.DOMPurify.sanitize(rawHtml);
+                        this.lastFormattedLength = text.length;
+                    } catch (e) {
+                        this.log('Markdown parse error:', e);
+                        formattedHtml = this.escapeHtml(text).replace(/\n/g, '<br>');
+                    }
+                } else {
+                    // Use last formatted version + plain text for new chars
+                    const newChars = text.substring(this.lastFormattedLength);
+                    formattedHtml = textElement.innerHTML.replace(/<span class="bf-cursor"><\/span>/g, '') + this.escapeHtml(newChars).replace(/\n/g, '<br>');
+                }
+                
+                textElement.innerHTML = formattedHtml;
+                
+                if (isStreaming) {
+                    // Add cursor
+                    const cursor = document.createElement('span');
+                    cursor.className = 'bf-cursor';
+                    textElement.appendChild(cursor);
+                    messageDiv.classList.add('bf-streaming');
+                    this.smartScroll();
+                } else {
+                    messageDiv.classList.remove('bf-streaming');
+                    this.scrollToBottom();
+                }
             } else {
-                textElement.innerHTML = this.formatMarkdown(text);
-                messageDiv.classList.remove('bf-streaming');
-                this.scrollToBottom();
+                // Fallback: basic formatting
+                if (isStreaming) {
+                    textElement.textContent = text;
+                    const cursor = document.createElement('span');
+                    cursor.className = 'bf-cursor';
+                    textElement.appendChild(cursor);
+                    messageDiv.classList.add('bf-streaming');
+                    this.smartScroll();
+                } else {
+                    textElement.innerHTML = this.formatMarkdown(text);
+                    messageDiv.classList.remove('bf-streaming');
+                    this.scrollToBottom();
+                }
             }
         }
 
@@ -1358,36 +1536,41 @@
         formatMarkdown(text) {
             if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\n/g, '<br>');
             
+            // Use marked.js if available
+            if (this.marked && this.DOMPurify) {
+                try {
+                    const rawHtml = this.marked.parse(text);
+                    const sanitizedHtml = this.DOMPurify.sanitize(rawHtml);
+                    return sanitizedHtml;
+                } catch (error) {
+                    this.log('Markdown parsing error, falling back:', error);
+                    // Fall through to basic formatting
+                }
+            }
+            
+            // Fallback: basic formatting
             let html = this.escapeHtml(text);
             
-            const codeBlocks = [];
-            const inlineCodes = [];
-            
-            html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
-                const index = codeBlocks.length;
-                codeBlocks.push(code);
-                return CONSTANTS.CODE_BLOCK_PLACEHOLDER + index + '}}';
-            });
-            
-            html = html.replace(/`([^`]+)`/g, (match, code) => {
-                const index = inlineCodes.length;
-                inlineCodes.push(code);
-                return CONSTANTS.INLINE_CODE_PLACEHOLDER + index + '}}';
-            });
-            
+            // Headers
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
             
-            html = html.replace(/\*\*(.+?)\*\*/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
-            html = html.replace(/__(.+?)__/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
+            // Bold
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
             
+            // Italic
             html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
             
-            html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_START, 'g'), '<strong>');
-            html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_END, 'g'), '</strong>');
+            // Code blocks
+            html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
             
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Links
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
                 try {
                     const urlObj = new URL(url, window.location.href);
@@ -1400,32 +1583,26 @@
                 }
             });
             
+            // Lists
             html = html.replace(/^\d+\.\s+(.+)$/gm, '<li data-list="ol">$1</li>');
             html = html.replace(/^[\-\*]\s+(.+)$/gm, '<li data-list="ul">$1</li>');
-            
             html = html.replace(/(<li[^>]*>.+?<\/li>(?:\n<li[^>]*>.+?<\/li>)*)/g, (match) => {
                 const listType = match.includes('data-list="ol"') ? 'ol' : 'ul';
                 const cleaned = match.replace(/ data-list="[^"]+"/g, '');
                 return `<${listType}>${cleaned}</${listType}>`;
             });
             
+            // Paragraphs
             html = html.replace(/\n\n/g, '</p><p>');
             html = html.replace(/\n/g, '<br>');
             html = '<p>' + html + '</p>';
-            
             html = html.replace(/<p><\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
             html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
             html = html.replace(/<p>(<h[123]>)/g, '$1');
             html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
-            
-            html = html.replace(new RegExp(CONSTANTS.INLINE_CODE_PLACEHOLDER + '(\\d+)}', 'g'), (match, index) => {
-                return `<code>${inlineCodes[parseInt(index)]}</code>`;
-            });
-            
-            html = html.replace(new RegExp(CONSTANTS.CODE_BLOCK_PLACEHOLDER + '(\\d+)}}', 'g'), (match, index) => {
-                return `<pre><code>${codeBlocks[parseInt(index)]}</code></pre>`;
-            });
+            html = html.replace(/<p>(<pre>)/g, '$1');
+            html = html.replace(/(<\/pre>)<\/p>/g, '$1');
             
             return html;
         }
