@@ -1,6 +1,12 @@
 /**
- * Beautiful Flowise Chat Widget v2.0.5
- * Ultra-Smooth Streaming Optimization
+ * Beautiful Flowise Chat Widget v2.0.6
+ * Real-Time Formatting & Perfect Centering
+ * 
+ * v2.0.6 Critical UX Fixes:
+ * - Real-time markdown formatting during streaming (not just after completion)
+ * - Perfect message width & centering (bot 85%, user 60%)
+ * - Instant formatting feedback (bold, italic, code blocks)
+ * - Better visual hierarchy and readability
  * 
  * v2.0.5 Performance Update:
  * - Optimized streaming batch interval (16ms → 50ms)
@@ -8,33 +14,25 @@
  * - Smart scrolling (only when user is near bottom)
  * - GPU-accelerated cursor animation
  * - Reduced CPU usage by ~40%
- * - Eliminated micro-stutters during streaming
  * 
  * v2.0.4 Critical Fix:
  * - Fixed numbered lists rendering as bullets
  * - Added proper list type detection (<ol> vs <ul>)
- * - Improved markdown list processing accuracy
  * 
  * v2.0.3 Critical Fixes:
  * - Fixed code blocks being mangled by markdown processors
  * - Added hex shorthand support (#fff, #000, etc.)
- * - Fixed markdown processing order (code blocks protected first)
- * - Optimized list detection logic
  * 
  * v2.0.2 Hotfix:
  * - Fixed bold placeholder conflict with italic regex
  * - Reduced streaming lag from 50ms to 16ms (60fps)
- * - Added immediate first token display
- * - Optimized scroll performance with RAF
  * 
- * Security & Performance Updates:
+ * Security & Performance:
  * - XSS protection for markdown links
  * - Request abortion and timeout handling
  * - LocalStorage growth capping
  * - Duplicate widget prevention
- * - Dynamic primary color computation
  * - Batched streaming updates
- * - Input locking during requests
  * - Memory leak prevention
  * 
  * Created by RPS
@@ -46,7 +44,7 @@
     const defaults = {
         theme: 'modern',
         primaryColor: '#6366f1',
-        primaryDarkColor: null, // Auto-computed if null
+        primaryDarkColor: null,
         position: 'bottom-right',
         width: '400px',
         height: '600px',
@@ -54,7 +52,7 @@
         subtitle: 'Online',
         welcomeMessage: 'Hi! How can I help you today?',
         placeholder: 'Type your message...',
-        sendButtonText: '\u27a4',
+        sendButtonText: '\\u27a4',
         showTimestamp: true,
         enableStreaming: true,
         enableMarkdown: true,
@@ -63,26 +61,23 @@
         maxMessages: 100,
         requestTimeout: 30000,
         debug: false,
-        avatar: '\ud83e\udd16',
+        avatar: '\\ud83e\\udd16',
         mode: 'popup',
         customUserMessageBg: null,
         customUserMessageText: null,
         customChatBg: null
     };
 
-    // Constants - optimized for ultra-smooth streaming
     const CONSTANTS = {
         FOCUS_DELAY: 100,
-        SCROLL_THROTTLE: 100, // Reduced scroll frequency
-        STREAM_UPDATE_INTERVAL: 50, // Update every 50ms for smooth batching
-        STREAM_MIN_CHARS: 3, // Minimum characters before update
+        SCROLL_THROTTLE: 100,
+        STREAM_UPDATE_INTERVAL: 50,
+        STREAM_MIN_CHARS: 3,
         MAX_INPUT_HEIGHT: 120,
         MIN_REQUEST_INTERVAL: 500,
         ALLOWED_URL_SCHEMES: ['http:', 'https:', 'mailto:', 'tel:'],
-        // Use unique placeholders that won't conflict with any markdown syntax
         BOLD_PLACEHOLDER_START: '{{BFBOLDSTART}}',
         BOLD_PLACEHOLDER_END: '{{BFBOLDEND}}',
-        // Code block protection placeholders
         CODE_BLOCK_PLACEHOLDER: '{{BFCODEBLOCK_',
         INLINE_CODE_PLACEHOLDER: '{{BFINLINECODE_'
     };
@@ -299,17 +294,18 @@
 .bf-message-content {
     display: flex !important;
     flex-direction: column !important;
-    max-width: 75% !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
 .bf-bot-message .bf-message-content {
     align-items: flex-start !important;
+    max-width: 85% !important;
 }
 
 .bf-user-message .bf-message-content {
     align-items: flex-end !important;
+    max-width: 60% !important;
 }
 
 .bf-message-text {
@@ -425,17 +421,18 @@
     }
 }
 
-/* Optimized cursor animation with GPU acceleration */
 .bf-streaming .bf-message-text {
     will-change: contents;
 }
 
 .bf-streaming .bf-cursor {
-    display: inline;
-    animation: blink-cursor 1s steps(2, start) infinite;
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--bf-primary-color);
     margin-left: 2px;
-    font-weight: bold;
-    color: var(--bf-primary-color);
+    animation: blink-cursor 1s steps(2, start) infinite;
+    vertical-align: text-bottom;
 }
 
 @keyframes blink-cursor {
@@ -573,7 +570,7 @@
     --bf-custom-user-msg-bg: rgba(0, 0, 0, 0.06);
 }
 
-/* CUSTOM THEME - Fully Customizable */
+/* CUSTOM THEME */
 .bf-theme-custom .bf-header {
     background: linear-gradient(135deg, var(--bf-primary-color), var(--bf-primary-dark)) !important;
 }
@@ -607,7 +604,7 @@
 }
 
 .bf-theme-custom .bf-streaming .bf-cursor {
-    color: var(--bf-primary-color) !important;
+    background: var(--bf-primary-color) !important;
 }
 
 .bf-theme-custom .bf-input:focus {
@@ -636,24 +633,20 @@
             this.messages = [];
             this.chatId = null;
             
-            // Performance optimization - Enhanced
             this.lastScrollTime = 0;
             this.scrollPending = false;
             this.scrollAnimationFrame = null;
             
-            // Streaming optimization - Ultra smooth
             this.streamBuffer = '';
             this.streamLastUpdate = '';
             this.streamUpdateTimer = null;
             this.streamCharCount = 0;
             this.firstTokenReceived = false;
             
-            // Request management
             this.abortController = null;
             this.isSending = false;
             this.lastRequestTime = 0;
             
-            // Event listener references
             this.eventListeners = [];
             
             this.init();
@@ -672,7 +665,7 @@
             this.attachEventListeners();
             this.loadFromStorage();
             
-            this.log('Chat ID:', this.chatId || 'Not yet assigned (will be created by Flowise)');
+            this.log('Chat ID:', this.chatId || 'Not yet assigned');
             this.log('Mode:', this.config.mode);
             this.log('Messages loaded:', this.messages.length);
         }
@@ -711,7 +704,7 @@
                 return this.darkenHex(color);
             }
             
-            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+            const rgbMatch = color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)(?:,\\s*([\\d.]+))?\\)/);
             if (rgbMatch) {
                 const [, r, g, b, a] = rgbMatch;
                 const darkR = Math.max(0, Math.floor(parseInt(r) * 0.8));
@@ -726,7 +719,6 @@
         darkenHex(hex) {
             hex = hex.replace('#', '');
             
-            // Support 3-digit hex shorthand (#fff -> #ffffff)
             if (hex.length === 3) {
                 hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
             }
@@ -743,7 +735,7 @@
         colorToRgba(color, alpha) {
             if (!color) return `rgba(99, 102, 241, ${alpha})`;
             
-            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            const rgbMatch = color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
             if (rgbMatch) {
                 const [, r, g, b] = rgbMatch;
                 return `rgba(${r}, ${g}, ${b}, ${alpha})`;
@@ -752,7 +744,6 @@
             if (color.startsWith('#')) {
                 let hex = color.replace('#', '');
                 
-                // Support 3-digit hex shorthand (#fff -> #ffffff)
                 if (hex.length === 3) {
                     hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
                 }
@@ -821,7 +812,7 @@
                     this.initializeWithWelcome();
                 }
             } catch (e) {
-                this.log('Error loading from storage (possibly corrupted), clearing:', e);
+                this.log('Error loading from storage:', e);
                 localStorage.removeItem(this.storageKey);
                 this.initializeWithWelcome();
             }
@@ -897,7 +888,7 @@
                 
                 this.initializeWithWelcome();
                 
-                this.log('Chat reset. ChatId cleared - will be assigned by Flowise on next message');
+                this.log('Chat reset');
             }
         }
 
@@ -942,7 +933,7 @@
                                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                                 </svg>
                             </button>
-                            <button class="bf-minimize-btn" id="bf-minimize">\u2212</button>
+                            <button class="bf-minimize-btn" id="bf-minimize">\\u2212</button>
                         </div>
                     </div>
                     <div class="bf-messages" id="bf-messages"></div>
@@ -1042,7 +1033,7 @@
             
             const now = Date.now();
             if (now - this.lastRequestTime < CONSTANTS.MIN_REQUEST_INTERVAL) {
-                this.log('Rate limited - too many requests');
+                this.log('Rate limited');
                 return;
             }
             this.lastRequestTime = now;
@@ -1076,7 +1067,7 @@
                     const elem = document.getElementById(botMessageId);
                     if (elem) elem.remove();
                     this.addMessage(
-                        "I'm having trouble connecting. Please check your internet and try again. \ud83d\udd04",
+                        "I'm having trouble connecting. Please try again. \\ud83d\\udd04",
                         'bot'
                     );
                 }
@@ -1139,7 +1130,7 @@
                     if (data.chatId && data.chatId !== this.chatId) {
                         this.chatId = data.chatId;
                         this.saveToStorage();
-                        this.log('\u2705 ChatId assigned by Flowise:', this.chatId);
+                        this.log('ChatId assigned:', this.chatId);
                     }
                     const botMessage = data.text || data.answer || data.response || 'No response';
                     this.updatePlaceholderMessage(botMessageId, botMessage, false);
@@ -1151,18 +1142,15 @@
                 const decoder = new TextDecoder();
                 let buffer = '';
                 
-                // Reset streaming state
                 this.streamBuffer = '';
                 this.streamLastUpdate = '';
                 this.streamCharCount = 0;
                 this.firstTokenReceived = false;
                 
-                // Update function with throttling and character threshold
                 const scheduleUpdate = () => {
-                    if (this.streamUpdateTimer) return; // Already scheduled
+                    if (this.streamUpdateTimer) return;
                     
                     this.streamUpdateTimer = setTimeout(() => {
-                        // Only update if we have enough new characters or it's the first token
                         const charDiff = this.streamBuffer.length - this.streamLastUpdate.length;
                         
                         if (charDiff >= CONSTANTS.STREAM_MIN_CHARS || !this.firstTokenReceived) {
@@ -1181,7 +1169,7 @@
 
                     buffer += decoder.decode(value, { stream: true });
                     
-                    const lines = buffer.split('\n');
+                    const lines = buffer.split('\\n');
                     buffer = lines.pop() || '';
                     
                     for (const line of lines) {
@@ -1189,7 +1177,7 @@
                         if (!trimmed || trimmed.startsWith(':') || !trimmed.startsWith('data:')) continue;
 
                         const payload = trimmed.slice(5).trim();
-                        if (payload === '[DONE]' || payload === '"[DONE]"') continue;
+                        if (payload === '[DONE]' || payload === '\"[DONE]\"') continue;
 
                         let token = '';
                         let metadata = null;
@@ -1206,7 +1194,7 @@
                                 }
                             }
                         } catch {
-                            if (payload.startsWith('"') && payload.endsWith('"')) {
+                            if (payload.startsWith('\"') && payload.endsWith('\"')) {
                                 try {
                                     token = JSON.parse(payload);
                                 } catch {
@@ -1220,20 +1208,17 @@
                         if (metadata && metadata.chatId && metadata.chatId !== this.chatId) {
                             this.chatId = metadata.chatId;
                             this.saveToStorage();
-                            this.log('\u2705 ChatId assigned by Flowise (metadata):', this.chatId);
+                            this.log('ChatId assigned:', this.chatId);
                         }
 
                         if (token) {
                             this.streamBuffer += token;
                             this.streamCharCount++;
-                            
-                            // Schedule throttled update
                             scheduleUpdate();
                         }
                     }
                 }
 
-                // Final update - clear any pending timer and force update
                 if (this.streamUpdateTimer) {
                     clearTimeout(this.streamUpdateTimer);
                     this.streamUpdateTimer = null;
@@ -1251,7 +1236,7 @@
                 if (error.name === 'AbortError' || error.message.includes('aborted')) {
                     throw error;
                 }
-                this.log('Streaming failed, using fallback:', error);
+                this.log('Streaming failed:', error);
                 await this.sendWithoutStreaming(message, botMessageId);
             }
         }
@@ -1278,7 +1263,7 @@
             if (data.chatId && data.chatId !== this.chatId) {
                 this.chatId = data.chatId;
                 this.saveToStorage();
-                this.log('\u2705 ChatId assigned by Flowise:', this.chatId);
+                this.log('ChatId assigned:', this.chatId);
             }
             
             const botMessage = data.text || data.answer || data.response || 'No response';
@@ -1345,35 +1330,30 @@
             const textElement = messageDiv.querySelector('.bf-message-text');
             
             if (isStreaming) {
-                // Use textContent for instant updates (no reflow from HTML parsing)
-                textElement.textContent = text + '|';
+                // REAL-TIME FORMATTING: Apply markdown during streaming!
+                const formatted = this.formatMarkdown(text);
+                textElement.innerHTML = formatted + '<span class="bf-cursor"></span>';
                 messageDiv.classList.add('bf-streaming');
-                
-                // Optimized scroll - only scroll if near bottom
                 this.smartScroll();
             } else {
-                // Final render with markdown
+                // Final render
                 textElement.innerHTML = this.formatMarkdown(text);
                 messageDiv.classList.remove('bf-streaming');
                 this.scrollToBottom();
             }
         }
 
-        // Smart scroll: only auto-scroll when user is near bottom
         smartScroll() {
             const container = document.getElementById('bf-messages');
             if (!container) return;
             
-            // Only auto-scroll if user is near bottom (within 100px)
             const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
             
             if (isNearBottom) {
-                // Cancel previous animation frame
                 if (this.scrollAnimationFrame) {
                     cancelAnimationFrame(this.scrollAnimationFrame);
                 }
                 
-                // Use RAF for smooth scrolling
                 this.scrollAnimationFrame = requestAnimationFrame(() => {
                     container.scrollTop = container.scrollHeight;
                     this.scrollAnimationFrame = null;
@@ -1382,94 +1362,74 @@
         }
 
         formatMarkdown(text) {
-            if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\n/g, '<br>');
+            if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\\n/g, '<br>');
             
             let html = this.escapeHtml(text);
             
-            // STEP 1: Protect code blocks and inline code by replacing with placeholders
             const codeBlocks = [];
             const inlineCodes = [];
             
-            // Extract code blocks FIRST (```...```)
-            html = html.replace(/```([\s\S]*?)```/g, (match, code) => {
+            html = html.replace(/```([\\s\\S]*?)```/g, (match, code) => {
                 const index = codeBlocks.length;
                 codeBlocks.push(code);
                 return CONSTANTS.CODE_BLOCK_PLACEHOLDER + index + '}}';
             });
             
-            // Extract inline code (`...`)
             html = html.replace(/`([^`]+)`/g, (match, code) => {
                 const index = inlineCodes.length;
                 inlineCodes.push(code);
                 return CONSTANTS.INLINE_CODE_PLACEHOLDER + index + '}}';
             });
             
-            // STEP 2: Now process markdown (code is protected)
-            
-            // Headers
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
             
-            // Bold - using unique placeholders that won't conflict
-            html = html.replace(/\*\*(.+?)\*\*/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
+            html = html.replace(/\\*\\*(.+?)\\*\\*/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
             html = html.replace(/__(.+?)__/g, CONSTANTS.BOLD_PLACEHOLDER_START + '$1' + CONSTANTS.BOLD_PLACEHOLDER_END);
             
-            // Italic
-            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/\\*(.+?)\\*/g, '<em>$1</em>');
             html = html.replace(/_(.+?)_/g, '<em>$1</em>');
             
-            // Replace bold placeholders with actual HTML
             html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_START, 'g'), '<strong>');
             html = html.replace(new RegExp(CONSTANTS.BOLD_PLACEHOLDER_END, 'g'), '</strong>');
             
-            // Links with XSS protection
-            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+            html = html.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, (match, text, url) => {
                 try {
                     const urlObj = new URL(url, window.location.href);
                     if (!CONSTANTS.ALLOWED_URL_SCHEMES.includes(urlObj.protocol)) {
                         return match;
                     }
-                    return `<a href="${this.escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+                    return `<a href=\"${this.escapeHtml(url)}\" target=\"_blank\" rel=\"noopener noreferrer\">${text}</a>`;
                 } catch {
                     return match;
                 }
             });
             
-            // Lists - numbered and bullet (mark types with data attributes for detection)
-            html = html.replace(/^\d+\.\s+(.+)$/gm, '<li data-list="ol">$1</li>');
-            html = html.replace(/^[\-\*]\s+(.+)$/gm, '<li data-list="ul">$1</li>');
+            html = html.replace(/^\\d+\\.\\s+(.+)$/gm, '<li data-list=\"ol\">$1</li>');
+            html = html.replace(/^[\\-\\*]\\s+(.+)$/gm, '<li data-list=\"ul\">$1</li>');
             
-            // Wrap consecutive <li> in appropriate list tags
-            html = html.replace(/(<li[^>]*>.+?<\/li>(?:\n<li[^>]*>.+?<\/li>)*)/g, (match) => {
-                // Detect list type from the first item's data attribute
-                const listType = match.includes('data-list="ol"') ? 'ol' : 'ul';
-                // Remove data attributes from the final HTML
-                const cleaned = match.replace(/ data-list="[^"]+"/g, '');
+            html = html.replace(/(<li[^>]*>.+?<\\/li>(?:\\n<li[^>]*>.+?<\\/li>)*)/g, (match) => {
+                const listType = match.includes('data-list=\"ol\"') ? 'ol' : 'ul';
+                const cleaned = match.replace(/ data-list=\"[^\"]+\"/g, '');
                 return `<${listType}>${cleaned}</${listType}>`;
             });
             
-            // Paragraphs
-            html = html.replace(/\n\n/g, '</p><p>');
-            html = html.replace(/\n/g, '<br>');
+            html = html.replace(/\\n\\n/g, '</p><p>');
+            html = html.replace(/\\n/g, '<br>');
             html = '<p>' + html + '</p>';
             
-            // Clean up
-            html = html.replace(/<p><\/p>/g, '');
+            html = html.replace(/<p><\\/p>/g, '');
             html = html.replace(/<p>(<[uo]l>)/g, '$1');
-            html = html.replace(/(<\/[uo]l>)<\/p>/g, '$1');
+            html = html.replace(/(<\\/[uo]l>)<\\/p>/g, '$1');
             html = html.replace(/<p>(<h[123]>)/g, '$1');
-            html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
+            html = html.replace(/(<\\/h[123]>)<\\/p>/g, '$1');
             
-            // STEP 3: Restore code blocks and inline code
-            
-            // Restore inline code
-            html = html.replace(new RegExp(CONSTANTS.INLINE_CODE_PLACEHOLDER + '(\\d+)}', 'g'), (match, index) => {
+            html = html.replace(new RegExp(CONSTANTS.INLINE_CODE_PLACEHOLDER + '(\\\\d+)}', 'g'), (match, index) => {
                 return `<code>${inlineCodes[parseInt(index)]}</code>`;
             });
             
-            // Restore code blocks
-            html = html.replace(new RegExp(CONSTANTS.CODE_BLOCK_PLACEHOLDER + '(\\d+)}}', 'g'), (match, index) => {
+            html = html.replace(new RegExp(CONSTANTS.CODE_BLOCK_PLACEHOLDER + '(\\\\d+)}}', 'g'), (match, index) => {
                 return `<pre><code>${codeBlocks[parseInt(index)]}</code></pre>`;
             });
             
@@ -1523,11 +1483,11 @@
             return false;
         }
         if (!config.chatflowid || typeof config.chatflowid !== 'string') {
-            console.error('BeautifulFlowiseChat: chatflowid is required and must be a string');
+            console.error('BeautifulFlowiseChat: chatflowid is required');
             return false;
         }
         if (!config.apiHost || typeof config.apiHost !== 'string') {
-            console.error('BeautifulFlowiseChat: apiHost is required and must be a string');
+            console.error('BeautifulFlowiseChat: apiHost is required');
             return false;
         }
         return true;
