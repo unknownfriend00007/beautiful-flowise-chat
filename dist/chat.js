@@ -1,23 +1,21 @@
 /**
- * Beautiful Flowise Chat Widget v2.1.0-rc1
- * Real-Time Markdown Formatting (Primus V2 Style)
+ * Beautiful Flowise Chat Widget v2.1.0-rc2
+ * True Real-Time Formatting Fix
  * 
- * v2.1.0-rc1 Critical Fix:
- * - Format markdown DURING streaming (not after)
- * - Batched formatting updates every 50ms
- * - Cache formatted output to prevent re-parsing
- * - Maintains smooth 50ms streaming interval
+ * v2.1.0-rc2 Critical Fixes:
+ * - Removed excessive paragraph spacing (Primus V2 style)
+ * - Format markdown on EVERY render (no aggressive caching)
+ * - Compact line-height and spacing
+ * - Fixed white-space handling
+ * 
+ * v2.1.0-rc1:
+ * - Real-time markdown formatting during streaming
+ * - Batched updates every 50ms
  * 
  * v2.1.0-beta:
- * - Integrated marked.js for superior markdown parsing
- * - Added DOMPurify for XSS protection
+ * - Integrated marked.js + DOMPurify
  * - Primus V2-style layout (bot: 95%, user: 60% max)
- * - Native table support with responsive styling
- * 
- * v2.0.5 Performance:
- * - Ultra-smooth streaming (50ms batch interval)
- * - Smart scrolling and GPU-accelerated cursor
- * - Reduced CPU usage by ~40%
+ * - Table support
  * 
  * Created by RPS | Inspired by Primus V2
  */
@@ -313,7 +311,7 @@
     padding: 12px 16px !important;
     border-radius: 16px;
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: keep-all;
@@ -349,13 +347,17 @@
     padding: 0 4px;
 }
 
-/* Primus V2-inspired content styling */
+/* Primus V2-inspired COMPACT content styling (KEY FIX) */
 .bf-bot-message .bf-message-text p { 
-    margin: 0 0 10px 0; 
+    margin: 0 0 8px 0;
 }
 
 .bf-bot-message .bf-message-text p:last-child { 
     margin-bottom: 0; 
+}
+
+.bf-bot-message .bf-message-text p:only-child {
+    margin-bottom: 0;
 }
 
 .bf-bot-message .bf-message-text strong { 
@@ -369,7 +371,7 @@
 
 .bf-bot-message .bf-message-text code {
     background: #f3f4f6;
-    padding: 3px 7px;
+    padding: 2px 6px;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
     font-size: 13px;
@@ -379,10 +381,10 @@
 .bf-bot-message .bf-message-text pre {
     background: #1f2937;
     color: #f9fafb;
-    padding: 14px;
+    padding: 12px;
     border-radius: 8px;
     overflow-x: auto;
-    margin: 10px 0;
+    margin: 8px 0;
 }
 
 .bf-bot-message .bf-message-text pre code {
@@ -393,7 +395,7 @@
 
 .bf-bot-message .bf-message-text ul,
 .bf-bot-message .bf-message-text ol {
-    margin: 10px 0;
+    margin: 8px 0;
     padding-left: 24px;
 }
 
@@ -406,7 +408,7 @@
 }
 
 .bf-bot-message .bf-message-text li { 
-    margin: 6px 0; 
+    margin: 4px 0;
     line-height: 1.5; 
 }
 
@@ -420,8 +422,14 @@
 .bf-bot-message .bf-message-text h3 {
     font-weight: 600;
     color: #111827;
-    margin: 14px 0 8px 0;
+    margin: 12px 0 8px 0;
     line-height: 1.3;
+}
+
+.bf-bot-message .bf-message-text h1:first-child,
+.bf-bot-message .bf-message-text h2:first-child,
+.bf-bot-message .bf-message-text h3:first-child {
+    margin-top: 0;
 }
 
 .bf-bot-message .bf-message-text h1 { font-size: 18px; }
@@ -432,9 +440,9 @@
 .bf-bot-message .bf-message-text table {
     width: 100%;
     border-collapse: collapse;
-    margin: 12px 0;
+    margin: 10px 0;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.4;
     display: block;
     overflow-x: auto;
     border: 1px solid #e5e7eb;
@@ -726,8 +734,7 @@
             this.streamCharCount = 0;
             this.firstTokenReceived = false;
             
-            // NEW: Cache for formatted markdown
-            this.formattedCache = '';
+            // Simplified: no aggressive caching
             this.lastFormattedLength = 0;
             
             this.abortController = null;
@@ -759,7 +766,7 @@
                 this.marked = window.marked;
                 this.DOMPurify = window.DOMPurify;
                 
-                // Configure marked for GFM (GitHub Flavored Markdown)
+                // Configure marked for GFM
                 if (this.marked && this.marked.setOptions) {
                     this.marked.setOptions({
                         breaks: true,
@@ -1166,8 +1173,7 @@
             this.currentStreamingMessageId = botMessageId;
             this.firstTokenReceived = false;
             
-            // Reset formatting cache
-            this.formattedCache = '';
+            // Reset tracking
             this.lastFormattedLength = 0;
             
             this.abortController = new AbortController();
@@ -1272,7 +1278,7 @@
                     this.streamUpdateTimer = setTimeout(() => {
                         const charDiff = this.streamBuffer.length - this.streamLastUpdate.length;
                         
-                        // Update DURING streaming with markdown formatting (Primus V2 style)
+                        // Update DURING streaming - EVERY TIME (no caching)
                         if (charDiff >= CONSTANTS.STREAM_MIN_CHARS || !this.firstTokenReceived) {
                             this.updatePlaceholderMessage(botMessageId, this.streamBuffer, true);
                             this.streamLastUpdate = this.streamBuffer;
@@ -1345,7 +1351,7 @@
                 }
                 
                 if (this.streamBuffer) {
-                    // Final update - same as streaming
+                    // Final update
                     this.updatePlaceholderMessage(botMessageId, this.streamBuffer, false);
                     this.addMessageToStorage(this.streamBuffer, 'bot');
                     this.streamBuffer = '';
@@ -1450,26 +1456,31 @@
 
             const textElement = messageDiv.querySelector('.bf-message-text');
             
-            // PRIMUS V2 APPROACH: Format markdown during AND after streaming
-            // Only re-parse if content has grown significantly (performance optimization)
+            // TRUE REAL-TIME: Format markdown on EVERY render (with light threshold)
             if (this.marked && this.DOMPurify && this.config.enableMarkdown) {
-                const needsReformat = text.length - this.lastFormattedLength > 10 || !isStreaming;
+                // Only re-parse if 5+ new characters OR final render
+                const needsReformat = text.length - this.lastFormattedLength >= 5 || !isStreaming;
                 
+                let formattedHtml;
                 if (needsReformat) {
                     try {
                         const rawHtml = this.marked.parse(text);
-                        this.formattedCache = this.DOMPurify.sanitize(rawHtml);
+                        formattedHtml = this.DOMPurify.sanitize(rawHtml);
                         this.lastFormattedLength = text.length;
                     } catch (e) {
                         this.log('Markdown parse error:', e);
-                        this.formattedCache = this.escapeHtml(text).replace(/\n/g, '<br>');
+                        formattedHtml = this.escapeHtml(text).replace(/\n/g, '<br>');
                     }
+                } else {
+                    // Use last formatted version + plain text for new chars
+                    const newChars = text.substring(this.lastFormattedLength);
+                    formattedHtml = textElement.innerHTML.replace(/<span class="bf-cursor"><\/span>/g, '') + this.escapeHtml(newChars).replace(/\n/g, '<br>');
                 }
                 
-                textElement.innerHTML = this.formattedCache;
+                textElement.innerHTML = formattedHtml;
                 
                 if (isStreaming) {
-                    // Add cursor at the end
+                    // Add cursor
                     const cursor = document.createElement('span');
                     cursor.className = 'bf-cursor';
                     textElement.appendChild(cursor);
@@ -1517,7 +1528,7 @@
         formatMarkdown(text) {
             if (!this.config.enableMarkdown) return this.escapeHtml(text).replace(/\n/g, '<br>');
             
-            // Use marked.js if available (Primus V2 approach)
+            // Use marked.js if available
             if (this.marked && this.DOMPurify) {
                 try {
                     const rawHtml = this.marked.parse(text);
@@ -1529,7 +1540,7 @@
                 }
             }
             
-            // Fallback: basic formatting (v2.0.5 approach)
+            // Fallback: basic formatting
             let html = this.escapeHtml(text);
             
             // Headers
