@@ -95,8 +95,6 @@
 
 .bf-container * {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
 
 .bf-container {
@@ -354,28 +352,28 @@
 }
 
 /* Perplexity-style COMPACT content styling with better readability */
-.bf-bot-message .bf-message-text p { 
+.bf-message-text p { 
     margin: 0 0 10px 0;
 }
 
-.bf-bot-message .bf-message-text p:last-child { 
+.bf-message-text p:last-child { 
     margin-bottom: 0; 
 }
 
-.bf-bot-message .bf-message-text p:only-child {
+.bf-message-text p:only-child {
     margin-bottom: 0;
 }
 
-.bf-bot-message .bf-message-text strong { 
+.bf-message-text strong { 
     font-weight: 600; 
     color: #111827; 
 }
 
-.bf-bot-message .bf-message-text em { 
+.bf-message-text em { 
     font-style: italic; 
 }
 
-.bf-bot-message .bf-message-text code {
+.bf-message-text code {
     background: #f3f4f6;
     padding: 2px 6px;
     border-radius: 4px;
@@ -384,7 +382,7 @@
     color: #be123c;
 }
 
-.bf-bot-message .bf-message-text pre {
+.bf-message-text pre {
     background: #1f2937;
     color: #f9fafb;
     padding: 12px;
@@ -393,58 +391,59 @@
     margin: 10px 0;
 }
 
-.bf-bot-message .bf-message-text pre code {
+.bf-message-text pre code {
     background: transparent;
     color: #f9fafb;
     padding: 0;
     font-size: 14px;
 }
 
-.bf-bot-message .bf-message-text ul,
-.bf-bot-message .bf-message-text ol {
+.bf-message-text ul,
+.bf-message-text ol {
     margin: 10px 0;
     padding-left: 24px;
 }
 
-.bf-bot-message .bf-message-text ul {
+.bf-message-text ul {
     list-style-type: disc;
 }
 
-.bf-bot-message .bf-message-text ol {
+.bf-message-text ol {
     list-style-type: decimal;
 }
 
-.bf-bot-message .bf-message-text li { 
+.bf-message-text li { 
     margin: 5px 0;
-    line-height: 1.6; 
+    line-height: 1.6;
+    display: list-item;
 }
 
-.bf-bot-message .bf-message-text a {
+.bf-message-text a {
     color: var(--bf-primary-color);
     text-decoration: underline;
 }
 
-.bf-bot-message .bf-message-text h1,
-.bf-bot-message .bf-message-text h2,
-.bf-bot-message .bf-message-text h3 {
+.bf-message-text h1,
+.bf-message-text h2,
+.bf-message-text h3 {
     font-weight: 600;
     color: #111827;
     margin: 14px 0 10px 0;
     line-height: 1.4;
 }
 
-.bf-bot-message .bf-message-text h1:first-child,
-.bf-bot-message .bf-message-text h2:first-child,
-.bf-bot-message .bf-message-text h3:first-child {
+.bf-message-text h1:first-child,
+.bf-message-text h2:first-child,
+.bf-message-text h3:first-child {
     margin-top: 0;
 }
 
-.bf-bot-message .bf-message-text h1 { font-size: 20px; }
-.bf-bot-message .bf-message-text h2 { font-size: 18px; }
-.bf-bot-message .bf-message-text h3 { font-size: 16px; }
+.bf-message-text h1 { font-size: 20px; }
+.bf-message-text h2 { font-size: 18px; }
+.bf-message-text h3 { font-size: 16px; }
 
 /* Table styling (Perplexity-sized) */
-.bf-bot-message .bf-message-text table {
+.bf-message-text table {
     width: 100%;
     border-collapse: collapse;
     margin: 12px 0;
@@ -455,24 +454,24 @@
     border: 1px solid #e5e7eb;
 }
 
-.bf-bot-message .bf-message-text th,
-.bf-bot-message .bf-message-text td {
+.bf-message-text th,
+.bf-message-text td {
     border: 1px solid #e5e7eb;
     padding: 10px 12px;
     text-align: left;
 }
 
-.bf-bot-message .bf-message-text thead th {
+.bf-message-text thead th {
     background: #f3f4f6;
     font-weight: 600;
     color: #111827;
 }
 
-.bf-bot-message .bf-message-text tbody tr:nth-child(odd) {
+.bf-message-text tbody tr:nth-child(odd) {
     background: white;
 }
 
-.bf-bot-message .bf-message-text tbody tr:nth-child(even) {
+.bf-message-text tbody tr:nth-child(even) {
     background: #f9fafb;
 }
 
@@ -648,18 +647,18 @@
 }
 .bf-theme-dark .bf-branding { color: #9ca3af; }
 .bf-theme-dark .bf-message-time { color: #9ca3af; }
-.bf-theme-dark .bf-bot-message .bf-message-text table thead th {
+.bf-theme-dark .bf-message-text table thead th {
     background: #4b5563;
     color: #f9fafb;
 }
-.bf-theme-dark .bf-bot-message .bf-message-text table tbody tr:nth-child(odd) {
+.bf-theme-dark .bf-message-text table tbody tr:nth-child(odd) {
     background: #374151;
 }
-.bf-theme-dark .bf-bot-message .bf-message-text table tbody tr:nth-child(even) {
+.bf-theme-dark .bf-message-text table tbody tr:nth-child(even) {
     background: #4b5563;
 }
-.bf-theme-dark .bf-bot-message .bf-message-text table th,
-.bf-theme-dark .bf-bot-message .bf-message-text table td {
+.bf-theme-dark .bf-message-text table th,
+.bf-theme-dark .bf-message-text table td {
     border-color: #4b5563;
 }
 
@@ -714,7 +713,7 @@
     color: var(--bf-primary-color) !important;
 }
 
-.bf-theme-custom .bf-bot-message .bf-message-text a {
+.bf-theme-custom .bf-message-text a {
     color: var(--bf-primary-color) !important;
 }
     `;
